@@ -6,14 +6,13 @@
 #    By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/12/22 14:06:43 by lumenthi          #+#    #+#              #
-#    Updated: 2020/02/12 17:31:10 by lumenthi         ###   ########.fr        #
+#    Updated: 2022/07/19 14:26:33 by lumenthi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 .PHONY : all clean fclean re
 
-NM_NAME = ft_nm
-OTOOL_NAME = ft_otool
+NAME = ft_nm
 
 CC = gcc
 FLAGS = -Wall -Werror -Wextra
@@ -44,68 +43,38 @@ LIBFT = $(LIBDIR)/libft.a
 
 ###### HEADERS ######
 
-NM_OTOOL_HEADS = nm_otool.h
-
-NM_OTOOL_HEADERS = $(addprefix $(HEADDIR)/, $(NM_OTOOL_HEADS))
+HEADS = nm.h
+HEADERS = $(addprefix $(HEADDIR)/, $(HEADS))
 
 #####################
 
 ###### SOURCES ######
 
-NM_MAIN = nm.c
+SRCS = nm.c \
+		map.c
 
-OTOOL_MAIN = otool.c
-
-NM_OTOOL_SRCS = $(NM_MAIN) \
-			$(OTOOL_MAIN) \
-			section_struct.c \
-			symbol_struct.c \
-			display.c \
-			macho.c \
-			archive.c \
-			fat.c \
-			swap.c \
-			segment.c \
-			symbol.c \
-			tools.c
-
-NM_OTOOL_SOURCES = $(addprefix $(SRCDIR)/, $(NM_OTOOL_SRCS))
+SOURCES = $(addprefix $(SRCDIR)/, $(SRCS))
 
 #####################
 
 ###### OBJECTS ######
 
-NM_MAIN_OBJ = $(addprefix $(OBJDIR)/, $(NM_MAIN:.c=.o))
-
-OTOOL_MAIN_OBJ = $(addprefix $(OBJDIR)/, $(OTOOL_MAIN:.c=.o))
-
-NM_OTOOL_OBJS = $(addprefix $(OBJDIR)/, $(NM_OTOOL_SRCS:.c=.o))
+OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.c=.o))
 
 #####################
 
-vpath %.c $(SRCDIR)
-
-all: $(NM_NAME) $(OTOOL_NAME)
+all: $(NAME)
 
 ###### FT_NM COMPILATION ######
 
-$(NM_NAME): $(filter-out $(OTOOL_MAIN_OBJ), $(NM_OTOOL_OBJS)) ${NM_OTOOL_HEADERS}
+$(NAME):  $(OBJS) ${HEADERS}
 	@ make -sC $(LIBDIR)
-	$(CC) $(filter-out $(OTOOL_MAIN_OBJ), $(NM_OTOOL_OBJS)) -o $(NM_NAME) $(LIBFT)
-	@ printf " %b | Compiled %b%b%b\n" $(TICK) $(GREEN) $(NM_NAME) $(BLANK)
+	$(CC) $(OBJS) -o $(NAME) $(LIBFT)
+	@ printf " %b | Compiled %b%b%b\n" $(TICK) $(GREEN) $(NAME) $(BLANK)
 
 ###############################
 
-###### FT_OTOOL COMPILATION ######
-
-$(OTOOL_NAME): $(filter-out $(NM_MAIN_OBJ), $(NM_OTOOL_OBJS)) ${NM_OTOOL_HEADERS}
-	@ make -sC $(LIBDIR)
-	$(CC) $(filter-out $(NM_MAIN_OBJ), $(NM_OTOOL_OBJS)) -o $(OTOOL_NAME) $(LIBFT)
-	@ printf " %b | Compiled %b%b%b\n" $(TICK) $(GREEN) $(OTOOL_NAME) $(BLANK)
-
-#################################
-
-$(NM_OTOOL_OBJS): $(OBJDIR)/%.o: $(SRCDIR)/%.c $(NM_OTOOL_HEADERS)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	mkdir -p $(OBJDIR)
 	$(CC) -c $(FLAGS) -I$(HEADDIR) -I$(LIBDIR) -o $@ $<
 
@@ -125,17 +94,11 @@ fclean: clean
 	printf "Removed %blibft%b library\n" $(RED) $(BLANK) \
 	|| (printf " %b | " $(CROSS) && \
 	printf "No %blibft%b library\n" $(RED) $(BLANK))
-	@ test -f $(OTOOL_NAME) && \
-	rm -rf $(OTOOL_NAME) && \
+	@ test -f $(NAME) && \
+	rm -rf $(NAME) && \
 	printf " %b | " $(TICK) && \
-	printf "Removed %b%b%b binary\n" $(RED) $(OTOOL_NAME) $(BLANK) \
+	printf "Removed %b%b%b binary\n" $(RED) $(NAME) $(BLANK) \
 	|| (printf " %b | " $(CROSS) && \
-	printf "No %b%b%b binary\n" $(RED) $(OTOOL_NAME) $(BLANK))
-	@ test -f $(NM_NAME) && \
-	rm -rf $(NM_NAME) && \
-	printf " %b | " $(TICK) && \
-	printf "Removed %b%b%b binary\n" $(RED) $(NM_NAME) $(BLANK) \
-	|| (printf " %b | " $(CROSS) && \
-	printf "No %b%b%b binary\n" $(RED) $(NM_NAME) $(BLANK))
+	printf "No %b%b%b binary\n" $(RED) $(NAME) $(BLANK))
 
 re: fclean all
