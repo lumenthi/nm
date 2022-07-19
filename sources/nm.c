@@ -6,37 +6,55 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/19 16:16:29 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/19 18:29:33 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
+void	process_symbol32(Elf32_Shdr *sheader32)
+{
+	printf("symbol name: %d\n", sheader32->sh_name);
+	printf("symbol type: %d\n", sheader32->sh_type);
+}
+
+void	process_symbol64(Elf64_Shdr *sheader64)
+{
+	printf("symbol name: %d\n", sheader64->sh_name);
+	printf("symbol type: %d\n", sheader64->sh_type);
+}
+
 void	symbols(void *header, char *path, int arch, size_t size)
 {
-	Elf32_Shdr *sheader32 = NULL;
-	Elf64_Shdr *sheader64 = NULL;
 	size_t shoff = 0;
+	uint32_t shsize = 0;
+	uint32_t shnum = 0;
+	uint32_t i = 0;
 
-	(void)path;
-	(void)sheader32;
-	(void)sheader64;
-	(void)shoff;
 	if (arch == 32) {
 		printf("ELF 32-Bits\n");
 		shoff = (uint32_t)(((Elf32_Ehdr*)header)->e_shoff);
-		sheader32 = (Elf32_Shdr *)(header + ((Elf32_Ehdr*)header)->e_shoff);
+		shnum = (uint32_t)(((Elf32_Ehdr*)header)->e_shnum);
+		shsize = (uint32_t)(((Elf32_Ehdr*)header)->e_shentsize);
 	}
 	else {
 		printf("ELF 64-Bits\n");
 		shoff = (uint64_t)(((Elf64_Ehdr*)header)->e_shoff);
-		sheader64 = (Elf64_Shdr *)(header + ((Elf64_Ehdr*)header)->e_shoff);
+		shnum = (uint32_t)(((Elf64_Ehdr*)header)->e_shnum);
+		shsize = (uint32_t)(((Elf64_Ehdr*)header)->e_shentsize);
 	}
-	printf("Found section header offset: %ld\n", ((Elf64_Ehdr*)header)->e_shoff);
-	if (shoff > size) {
-		ft_putstr_fd("error: nm: invalid section offset: ", STDERR_FILENO);
+	printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
+	if (shoff+shnum*shsize > size) {
+		ft_putstr_fd("error: nm: invalid sections: ", STDERR_FILENO);
 		ft_putstr_fd(path, STDERR_FILENO);
 		return;
+	}
+	while (i < shnum) {
+		if (arch == 32)
+			process_symbol32((Elf32_Shdr *)(header + shoff + i*shsize));
+		else
+			process_symbol64((Elf64_Shdr *)(header + shoff + i*shsize));
+		i++;
 	}
 }
 
@@ -55,7 +73,6 @@ void	ft_nm(char *path, void *buffer, size_t size)
 	if (*(uint32_t*)header==0x464c457f) { // ELF Magic number
 		if (*(uint8_t*)((void*)header+4) == 2) // EI_CLASS = 2 (64 Bits)
 			arch = 64;
-		// TODO: CHECK LENGTH TO SEE IF WE CAN ACCESS SH OFFSET
 		symbols((void*)header, path, arch, size);
 	}
 }
