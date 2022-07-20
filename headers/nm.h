@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/20 14:49:38 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/20 16:00:35 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,6 +106,25 @@ typedef struct {
         Elf64_Xword     sh_entsize;
 } Elf64_Shdr; */
 
+// SYMBOLS
+/* struct Elf32_Sym {
+	Elf32_Word			st_name;	// Symbol name (index into string table)
+	Elf32_Addr			st_value;	// Value or address associated with the symbol
+	Elf32_Word			st_size;	// Size of the symbol
+	unsigned char		st_info;	// Symbol's type and binding attributes
+	unsigned char		st_other;	// Must be zero; reserved
+	Elf32_Half			st_shndx;	// Which section (header table index) it's defined in
+};
+
+struct Elf64_Sym {
+	Elf64_Word			st_name;	// Symbol name (index into string table)
+	unsigned char		st_info;	// Symbol's type and binding attributes
+	unsigned char		st_other;	// Must be zero; reserved
+	Elf64_Half			st_shndx;	// Which section (header tbl index) it's defined in
+	Elf64_Addr			st_value;	// Value or address associated with the symbol
+	Elf64_Xword			st_size;	// Size of the symbol
+}; */
+
 typedef struct			s_section {
 	char				*sym_name;
 	uint32_t			sh_name;
@@ -119,7 +138,7 @@ typedef struct			s_section {
 typedef struct {
 		Elf64_Off       sh_offset;
 		Elf64_Xword     sh_size;
-} t_Sym_Shdr;
+}						t_Sym_Shdr;
 
 // MAP.C
 void	*map_file(char *path, size_t *size);
