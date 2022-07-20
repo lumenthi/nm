@@ -6,7 +6,7 @@
 #    By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/12/22 14:06:43 by lumenthi          #+#    #+#              #
-#    Updated: 2022/07/19 14:26:33 by lumenthi         ###   ########.fr        #
+#    Updated: 2022/07/20 12:30:06 by lumenthi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@
 NAME = ft_nm
 
 CC = gcc
-FLAGS = -Wall -Werror -Wextra
+FLAGS = -Wall -Werror -Wextra -g
 
 GREEN = '\033[4;32m'
 RED = '\033[4;31m'
@@ -51,7 +51,8 @@ HEADERS = $(addprefix $(HEADDIR)/, $(HEADS))
 ###### SOURCES ######
 
 SRCS = nm.c \
-		map.c
+		map.c \
+		list.c
 
 SOURCES = $(addprefix $(SRCDIR)/, $(SRCS))
 

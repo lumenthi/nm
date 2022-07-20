@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/19 16:37:43 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/20 14:49:38 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,7 @@
 #include <sys/stat.h> // FSTAT
 #include <fcntl.h> // OPEN
 #include <elf.h> // ELF RELATED STRUCTURES
-
-// STRUCTURES
-
-// HEADER
+#include <stdlib.h> // MALLOC
 
 /*
 typedef uint32_t	Elf32_Addr;
@@ -46,6 +43,8 @@ typedef uint64_t	Elf64_Lword;
 typedef uint64_t	Elf64_Xword;
 */
 
+// STRUCTURES
+// HEADER
 /* typedef struct {
         unsigned char   e_ident[EI_NIDENT];
         Elf32_Half      e_type;
@@ -80,7 +79,52 @@ typedef struct {
         Elf64_Half      e_shstrndx;
 } Elf64_Ehdr; */
 
+// SECTIONS
+/* typedef struct {
+        Elf32_Word      sh_name;
+        Elf32_Word      sh_type;
+        Elf32_Word      sh_flags;
+        Elf32_Addr      sh_addr;
+        Elf32_Off       sh_offset;
+        Elf32_Word      sh_size;
+        Elf32_Word      sh_link;
+        Elf32_Word      sh_info;
+        Elf32_Word      sh_addralign;
+        Elf32_Word      sh_entsize;
+} Elf32_Shdr;
+
+typedef struct {
+        Elf64_Word      sh_name;
+        Elf64_Word      sh_type;
+        Elf64_Xword     sh_flags;
+        Elf64_Addr      sh_addr;
+        Elf64_Off       sh_offset;
+        Elf64_Xword     sh_size;
+        Elf64_Word      sh_link;
+        Elf64_Word      sh_info;
+        Elf64_Xword     sh_addralign;
+        Elf64_Xword     sh_entsize;
+} Elf64_Shdr; */
+
+typedef struct			s_section {
+	char				*sym_name;
+	uint32_t			sh_name;
+	uint32_t			sh_type;
+	uint32_t			sh_flags;
+	uint64_t			sh_offset;
+	int					arch;
+	struct s_section	*next;
+}						t_section;
+
+typedef struct {
+		Elf64_Off       sh_offset;
+		Elf64_Xword     sh_size;
+} t_Sym_Shdr;
+
 // MAP.C
 void	*map_file(char *path, size_t *size);
+
+// LIST.C
+void	display_symbols(t_section *symbols);
 
 #endif
