@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/20 16:00:35 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/20 19:08:10 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -125,25 +125,30 @@ struct Elf64_Sym {
 	Elf64_Xword			st_size;	// Size of the symbol
 }; */
 
-typedef struct			s_section {
+typedef struct			s_symbol {
 	char				*sym_name;
-	uint32_t			sh_name;
-	uint32_t			sh_type;
-	uint32_t			sh_flags;
-	uint64_t			sh_offset;
-	int					arch;
-	struct s_section	*next;
-}						t_section;
+
+	Elf64_Word			st_name;
+	unsigned char		st_info;
+	unsigned char		st_other;
+	Elf64_Half			st_shndx;
+	Elf64_Addr			st_value;
+	Elf64_Xword			st_size;
+
+	struct s_symbol		*next;
+}						t_symbol;
 
 typedef struct {
-		Elf64_Off       sh_offset;
-		Elf64_Xword     sh_size;
-}						t_Sym_Shdr;
+		Elf64_Off		symtab_offset;
+		Elf64_Xword		symtab_size;
+		Elf64_Off		strtab_offset;
+		Elf32_Xword		strtab_size;
+}						t_info;
 
 // MAP.C
 void	*map_file(char *path, size_t *size);
 
 // LIST.C
-void	display_symbols(t_section *symbols);
+void	display_symbols(t_symbol *symbols);
 
 #endif

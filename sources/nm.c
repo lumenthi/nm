@@ -6,22 +6,22 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/20 16:00:47 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/20 19:15:13 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-/*static void	append(t_section **head, t_section *new) {*/
-	/*t_section *tmp = *head;*/
-	/*if (*head == NULL)*/
-		/**head = new;*/
-	/*else {*/
-		/*while (tmp->next != NULL)*/
-			/*tmp = tmp->next;*/
-		/*tmp->next = new;*/
-	/*}*/
-/*}*/
+static void	append(t_symbol **head, t_symbol *new) {
+	t_symbol *tmp = *head;
+	if (*head == NULL)
+		*head = new;
+	else {
+		while (tmp->next != NULL)
+			tmp = tmp->next;
+		tmp->next = new;
+	}
+}
 
 /*static void	process_section32(Elf32_Shdr *sheader32, t_section **sections)*/
 /*{*/
@@ -39,79 +39,111 @@
 	/*append(sections, new);*/
 /*}*/
 
-/*static void	process_section64(Elf64_Shdr *sheader64, t_section **sections)*/
-/*{*/
-	/*t_section *new = (t_section *)malloc(sizeof(t_section));*/
-	/*if (!new) {*/
-		/*return;*/
-	/*}*/
-	/*new->sym_name = NULL;*/
-	/*new->sh_name = sheader64->sh_name;*/
-	/*new->sh_type = sheader64->sh_type;*/
-	/*new->sh_flags = sheader64->sh_flags;*/
-	/*new->sh_offset = sheader64->sh_offset;*/
-	/*new->arch = 64;*/
-	/*new->next = NULL;*/
-	/*append(sections, new);*/
-/*}*/
+static void	process_symbol64(void *header, Elf64_Sym *sheader64, t_symbol **symbols, t_info infos)
+{
+	t_symbol *new = (t_symbol *)malloc(sizeof(t_symbol));
+	if (!new) {
+		return;
+	}
+	new->sym_name = (char*)(header+infos.strtab_offset)+sheader64->st_name;
 
-int		process_symbols(void *header, t_Sym_Shdr Sym_Shdr, int arch)
+	new->st_name = sheader64->st_name;
+	new->st_info = sheader64->st_info;
+	new->st_other = sheader64->st_other;
+	new->st_shndx = sheader64->st_shndx;
+	new->st_value = sheader64->st_value;
+	new->st_size = sheader64->st_size;
+	new->next = NULL;
+	append(symbols, new);
+}
+
+int		get_symbols(void *header, t_info infos, int arch, t_symbol **symbols)
 {
 	size_t i = 0;
 	Elf32_Sym *Sym32 = NULL;
 	Elf64_Sym *Sym64 = NULL;
 	if (arch == 32) {
-		while (i * sizeof(Elf32_Sym) < Sym_Shdr.sh_size) {
-			Sym32 = (Elf32_Sym *)(header+Sym_Shdr.sh_offset+i*sizeof(Elf32_Sym));
-			printf("Symbol name: %x, size: %d, i: %ld\n", Sym32->st_name, Sym32->st_size, i);
+		while (i * sizeof(Elf32_Sym) < infos.symtab_size) {
+			Sym32 = (Elf32_Sym *)(header+infos.symtab_offset+i*sizeof(Elf32_Sym));
+			(void)Sym32;
 			i++;
 		}
 	}
 	else {
-		while (i * sizeof(Elf64_Sym) < Sym_Shdr.sh_size) {
-			Sym64 = (Elf64_Sym *)(header+Sym_Shdr.sh_offset+i*sizeof(Elf64_Sym));
-			printf("Symbol name: %x, size: %ld, i: %ld\n", Sym64->st_name, Sym64->st_size, i);
+		while (i * sizeof(Elf64_Sym) < infos.symtab_size) {
+			Sym64 = (Elf64_Sym *)(header+infos.symtab_offset+i*sizeof(Elf64_Sym));
+			process_symbol64(header, Sym64, symbols, infos);
 			i++;
 		}
 	}
 	return 0;
 }
 
-int		symtab_infos(void *header, char *path, int arch, size_t size,
-						t_Sym_Shdr *Sym_Shdr)
+int		sections_infos(void *header, char *path, int arch, size_t size,
+						t_info *infos)
 {
 	size_t shoff = 0;
+	size_t shstrndx = 0;
 	uint32_t shsize = 0;
 	uint32_t shnum = 0;
 	uint32_t i = 0;
+	Elf64_Shdr *shstrtab;
 
+	// Variables assignment
 	if (arch == 32) {
 		printf("ELF 32-Bits\n");
 		shoff = (uint32_t)(((Elf32_Ehdr*)header)->e_shoff);
 		shnum = (uint32_t)(((Elf32_Ehdr*)header)->e_shnum);
 		shsize = (uint32_t)(((Elf32_Ehdr*)header)->e_shentsize);
+		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
 	}
 	else {
 		printf("ELF 64-Bits\n");
 		shoff = (uint64_t)(((Elf64_Ehdr*)header)->e_shoff);
 		shnum = (uint32_t)(((Elf64_Ehdr*)header)->e_shnum);
 		shsize = (uint32_t)(((Elf64_Ehdr*)header)->e_shentsize);
+		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
 	}
 	printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
-	if (shoff+shnum*shsize > size) {
+
+	// Error check
+	if (shoff+shnum*shsize > size || shoff+shstrndx*shsize > size) {
 		ft_putstr_fd("error: nm: invalid sections: ", STDERR_FILENO);
 		ft_putstr_fd(path, STDERR_FILENO);
 		return -1;
 	}
+
+	// Calculate shstrtab, we use it to get section name
+	shstrtab = (void*)(header + shoff)+(shstrndx*shsize);
+
 	while (i < shnum) {
-		if (((Elf64_Shdr *)(header + shoff + i*shsize))->sh_type == 0x2) { // SYMTAB VALUE
+		if (((Elf32_Shdr *)(header + shoff + i*shsize))->sh_type == 0x2) { // SYMTAB VALUE
 			if (arch == 32) {
-				Sym_Shdr->sh_offset = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_offset;
-				Sym_Shdr->sh_size = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_size;
+				infos->symtab_offset = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_offset;
+				infos->symtab_size = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_size;
 			}
 			else {
-				Sym_Shdr->sh_offset = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_offset;
-				Sym_Shdr->sh_size = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_size;
+				infos->symtab_offset = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_offset;
+				infos->symtab_size = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_size;
+			}
+		}
+		else if (((Elf32_Shdr *)(header + shoff + i*shsize))->sh_type == 0x3) { // STRTAB VALUE
+			// Error check
+			if (shstrtab->sh_offset+((Elf32_Shdr *)(header + shoff + i*shsize))->sh_name > size) {
+				ft_putstr_fd("error: nm: invalid sections: ", STDERR_FILENO);
+				ft_putstr_fd(path, STDERR_FILENO);
+				return -1;
+			}
+
+			if (!ft_strcmp((char*)(header+shstrtab->sh_offset+((Elf32_Shdr *)(header + shoff + i*shsize))->sh_name), ".strtab")) {
+				if (arch == 32) {
+					infos->strtab_offset = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_offset;
+					infos->strtab_size = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_size;
+				}
+				else {
+					infos->strtab_offset = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_offset;
+					infos->strtab_size = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_size;
+				}
 			}
 		}
 		i++;
@@ -122,7 +154,8 @@ int		symtab_infos(void *header, char *path, int arch, size_t size,
 void	ft_nm(char *path, void *buffer, size_t size)
 {
 	Elf32_Ehdr *header = NULL;
-	t_Sym_Shdr Sym_Shdr;
+	t_info infos;
+	t_symbol *symbols = NULL;
 	int arch = 32;
 
 	if (size < sizeof(Elf32_Ehdr) || size < sizeof(Elf64_Ehdr)) {
@@ -135,10 +168,14 @@ void	ft_nm(char *path, void *buffer, size_t size)
 	if (*(uint32_t*)header==0x464c457f) { // ELF Magic number
 		if (*(uint8_t*)((void*)header+4) == 2) // EI_CLASS = 2 (64 Bits)
 			arch = 64;
-		if (symtab_infos((void*)header, path, arch, size, &Sym_Shdr) == -1)
+		if (sections_infos((void*)header, path, arch, size, &infos) == -1)
 			return;
-		printf("Found symbol table at offset: %lx with size: %lx\n", Sym_Shdr.sh_offset, Sym_Shdr.sh_size);
-		process_symbols((void*)header, Sym_Shdr, arch);
+		printf("Found symbol table at offset: %lx with size: %lx\n", infos.symtab_offset,
+			infos.symtab_size);
+		printf("Found string table at offset: %lx with size: %lx\n", infos.strtab_offset,
+			infos.strtab_size);
+		get_symbols((void*)header, infos, arch, &symbols);
+		display_symbols(symbols);
 	}
 }
 
