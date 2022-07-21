@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 14:57:25 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 17:05:43 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,11 +120,8 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 	infos->section_size = shsize*shnum;
 
 	// Error check
-	if (shoff+shnum*shsize > size || shoff+shstrndx*shsize > size) {
-		ft_putstr_fd("error: nm: invalid sections: ", STDERR_FILENO);
-		ft_putstr_fd(path, STDERR_FILENO);
-		return -1;
-	}
+	if (shoff+shnum*shsize > size || shoff+shstrndx*shsize > size)
+		return error("invalid sections", path);
 
 	// Calculate shstrtab, we use it to get section name
 	shstrtab = (void*)(header + shoff)+(shstrndx*shsize);
@@ -145,11 +142,8 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 		}
 		else if (cursh32->sh_type == 0x3) { // STRTAB VALUE
 			// Error check
-			if (shstrtab->sh_offset+cursh32->sh_name > size) {
-				ft_putstr_fd("error: nm: invalid sections: ", STDERR_FILENO);
-				ft_putstr_fd(path, STDERR_FILENO);
-				return -1;
-			}
+			if (shstrtab->sh_offset+cursh32->sh_name > size)
+				return error("invalid sections", path);
 
 			if (!ft_strcmp((char*)(header+shstrtab->sh_offset+cursh32->sh_name), ".strtab")) {
 				if (arch == 32) {
@@ -168,26 +162,50 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 	return 0;
 }
 
-void	ft_nm(char *path, void *buffer, size_t size)
+static t_info	new_info()
+{
+	t_info infos;
+
+	infos.shdr = NULL;
+	infos.section_size = 0;
+	infos.symtab_offset = 0;
+	infos.symtab_size = 0;
+	infos.strtab_offset = 0;
+	infos.strtab_size = 0;
+
+	return infos;
+}
+
+int		error(char *str, char *path)
+{
+	ft_putstr_fd("nm: ", STDERR_FILENO);
+	ft_putstr_fd(path, STDERR_FILENO);
+	ft_putstr_fd(": ", STDERR_FILENO);
+	ft_putstr_fd(str, STDERR_FILENO);
+	ft_putchar_fd('\n', STDERR_FILENO);
+	return 1;
+}
+
+int		ft_nm(char *path, void *buffer, size_t size)
 {
 	Elf32_Ehdr *header = NULL;
-	t_info infos;
+	t_info infos = new_info();
 	t_symbol *symbols = NULL;
 	int arch = 32;
 
-	if (size < sizeof(Elf32_Ehdr) || size < sizeof(Elf64_Ehdr)) {
-		ft_putstr_fd("error: nm: invalid header: ", STDERR_FILENO);
-		ft_putstr_fd(path, STDERR_FILENO);
-		return;
-	}
+	if (size < sizeof(Elf32_Ehdr) || size < sizeof(Elf64_Ehdr))
+		return error("invalid header", path);
 	header = (Elf32_Ehdr *)buffer;
 	// 0x7f454c46
 	if (*(uint32_t*)header==0x464c457f) { // ELF Magic number
 		if (*(uint8_t*)((void*)header+4) == 2) // EI_CLASS = 2 (64 Bits)
 			arch = 64;
 		if (sections_infos((void*)header, path, arch, size, &infos) == -1)
-			return;
-		// printf("Found symbol table at offset: %lx with size: %lx\n", infos.symtab_offset,
+			return -1;
+		if (infos.symtab_offset == 0 || infos.symtab_size == 0) {
+			return error("no symbols", path);
+		}
+		// printf("Found symbol table at offset: 0x%lx with size: 0x%lx\n", infos.symtab_offset,
 			// infos.symtab_size);
 		// printf("Found string table at offset: %lx with size: %lx\n", infos.strtab_offset,
 			// infos.strtab_size);
@@ -195,21 +213,28 @@ void	ft_nm(char *path, void *buffer, size_t size)
 		sort_symbols(&symbols);
 		// t_symbols_display(symbols);
 		display_symbols(symbols, infos);
+		free_symbols(&symbols);
 		// FREE LIST
 	}
+	else
+		return error("file format not recognized", path);
+	return 0;
 }
 
-void	nm(char *path)
+int		nm(char *path)
 {
 	void	*buffer;
 	size_t	size;
+	int		ret;
 
 	size = 0;
+	ret = 0;
 	buffer = map_file(path, &size);
 	if (buffer) {
-		ft_nm(path, buffer, size);
+		ret = ft_nm(path, buffer, size);
 		munmap(buffer, size);
 	}
+	return ret;
 }
 
 int		main(int argc, char **argv)

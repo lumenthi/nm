@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 14:53:08 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 15:25:00 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,14 +56,25 @@ static void		display_type64(t_symbol *symbol, t_info infos)
 	Elf64_Shdr *shdr64 = (Elf64_Shdr *)(infos.shdr);
 	char letter = '?';
 
+	// printf("name: %s, type: 0x%x\n", symbol->sym_name, shdr64[symbol->st_shndx].sh_type);
+
+	/* absolute symbol */
+	if (symbol->st_shndx == SHN_ABS)
+		letter = 'A';
+	/* common symbol*/
+	else if (symbol->st_shndx == SHN_COMMON)
+		letter = 'C';
+
 	/* unique global symbol */
-	if (ELF64_ST_BIND(st_info) == STB_GNU_UNIQUE)
+	else if (ELF64_ST_BIND(st_info) == STB_GNU_UNIQUE)
 		letter = 'u';
 	else if (ELF64_ST_BIND(st_info) == STB_WEAK) {
 		letter = 'W';
 		if (symbol->st_shndx == SHN_UNDEF)
 			letter = 'w';
 	}
+	else if (symbol->st_shndx == SHN_UNDEF)
+		letter = 'U';
 	else if (ELF64_ST_BIND(st_info) == STB_WEAK && ELF64_ST_TYPE(st_info) == STT_OBJECT) {
 		letter = 'V';
 		if (symbol->st_shndx == SHN_UNDEF)
@@ -88,20 +99,10 @@ static void		display_type64(t_symbol *symbol, t_info infos)
 	else if (shdr64[symbol->st_shndx].sh_type == SHT_NOBITS
 		&& shdr64[symbol->st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
 		letter = 'B';
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_DYNAMIC)
+	else if (shdr64[symbol->st_shndx].sh_type == SHT_INIT_ARRAY ||
+		shdr64[symbol->st_shndx].sh_type == SHT_FINI_ARRAY ||
+		shdr64[symbol->st_shndx].sh_type == SHT_DYNAMIC)
 		letter = 'D';
-
-	/* section index member analysis */
-
-	/* undefined symbol */
-	else if (symbol->st_shndx == SHN_UNDEF)
-		letter = 'U';
-	/* absolute symbol */
-	else if (symbol->st_shndx == SHN_ABS)
-		letter = 'A';
-	/* common symbol*/
-	else if (symbol->st_shndx == SHN_COMMON)
-		letter = 'C';
 
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF64_ST_BIND(st_info) == STB_LOCAL && letter != '?')

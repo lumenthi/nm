@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 13:00:24 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 17:10:53 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,10 +164,12 @@ typedef struct {
 void	*map_file(char *path, size_t *size);
 
 // LIST.C
-void	t_symbols_display(t_symbol *symbols);
 void	sort_symbols(t_symbol **head);
+void	free_symbols(t_symbol **symbols);
 
 // DISPLAY.C
 void	display_symbols(t_symbol *symbols, t_info infos);
+
+int		error(char *str, char *path);
 
 #endif

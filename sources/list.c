@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 15:04:28 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 17:10:48 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,14 +87,14 @@ void	sort_symbols(t_symbol **head) {
 	}
 }
 
-void	t_symbols_display(t_symbol *symbols)
+void	free_symbols(t_symbol **symbols)
 {
-	t_symbol *tmp = symbols;
-
-	while (tmp) {
-		printf("FULLNAME: %s\nINFO: 0x%x\nVALUE: 0x%lx\nSIZE: 0x%lx\n",\
-			tmp->sym_name, tmp->st_info, tmp->st_value, tmp->st_size);
-		printf("==========================\n");
-		tmp = tmp->next;
+	t_symbol *current = *symbols;
+	t_symbol *next;
+	while (current != NULL) {
+		next = current->next;
+		free(current);
+		current = next;
 	}
+	*symbols = NULL;
 }
