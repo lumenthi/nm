@@ -6,26 +6,34 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 11:37:24 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 15:04:28 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-static int		sym_cmp(char *s1, char *s2)
+static int		sym_cmp(char *s1b, char *s2b)
 {
 	int i;
+	int special1 = 0;
+	int special2 = 0;
 	char s1_c;
 	char s2_c;
+	char *s1 = s1b;
+	char *s2 = s2b;
 
 	i = 0;
 	if (!s1 || !s2)
 		return (0);
 	/* must ignore '_' char like real nm */
-	while (*s1 == '_')
+	while (*s1 == '_') {
 		s1++;
-	while (*s2 == '_')
+		special1 = 1;
+	}
+	while (*s2 == '_') {
 		s2++;
+		special2 = 1;
+	}
 	while (s1[i] || s2[i])
 	{
 		s1_c = ft_tolower(s1[i]);
@@ -36,6 +44,11 @@ static int		sym_cmp(char *s1, char *s2)
 			return (s1_c - s2_c);
 		i++;
 	}
+	/* When same name, nm put the __symbol first */
+	if (special1)
+		return -1;
+	else if (special2)
+		return 1;
 	return (0);
 }
 
@@ -74,7 +87,7 @@ void	sort_symbols(t_symbol **head) {
 	}
 }
 
-void	display_symbols(t_symbol *symbols)
+void	t_symbols_display(t_symbol *symbols)
 {
 	t_symbol *tmp = symbols;
 

@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 11:28:00 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 13:00:24 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -133,25 +133,27 @@ typedef struct			s_symbol {
 	// Raw data
 	Elf64_Word			st_name;
 	unsigned char		st_info;
-	/* #define STB_LOCAL  0
-		#define STB_GLOBAL 1
-		#define STB_WEAK   2
-		#define STT_NOTYPE  0
-		#define STT_OBJECT  1
-		#define STT_FUNC    2
-		#define STT_SECTION 3
-		#define STT_FILE    4
-		#define STT_COMMON  5
-		#define STT_TLS     6 */
+	/*The symbol's type and binding attributes. A list of the values and meanings appears in Table 7-19.
+		The following code shows how to manipulate the values, defined in sys/elf.h:
+			#define ELF32_ST_BIND(info)          ((info) >> 4)
+			#define ELF32_ST_TYPE(info)          ((info) & 0xf)
+			#define ELF32_ST_INFO(bind, type)    (((bind)<<4)+((type)&0xf))
+
+			#define ELF64_ST_BIND(info)          ((info) >> 4)
+			#define ELF64_ST_TYPE(info)          ((info) & 0xf)
+			#define ELF64_ST_INFO(bind, type)    (((bind)<<4)+((type)&0xf))*/
 	unsigned char		st_other;
 	Elf64_Half			st_shndx;
 	Elf64_Addr			st_value;
 	Elf64_Xword			st_size;
+	int					arch;
 
 	struct s_symbol		*next;
 }						t_symbol;
 
 typedef struct {
+		void			*shdr;
+		Elf64_Word		section_size;
 		Elf64_Off		symtab_offset;
 		Elf64_Xword		symtab_size;
 		Elf64_Off		strtab_offset;
@@ -162,7 +164,10 @@ typedef struct {
 void	*map_file(char *path, size_t *size);
 
 // LIST.C
-void	display_symbols(t_symbol *symbols);
+void	t_symbols_display(t_symbol *symbols);
 void	sort_symbols(t_symbol **head);
+
+// DISPLAY.C
+void	display_symbols(t_symbol *symbols, t_info infos);
 
 #endif

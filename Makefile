@@ -6,7 +6,7 @@
 #    By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/12/22 14:06:43 by lumenthi          #+#    #+#              #
-#    Updated: 2022/07/20 12:30:06 by lumenthi         ###   ########.fr        #
+#    Updated: 2022/07/21 11:51:51 by lumenthi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -52,7 +52,8 @@ HEADERS = $(addprefix $(HEADDIR)/, $(HEADS))
 
 SRCS = nm.c \
 		map.c \
-		list.c
+		list.c \
+		display.c
 
 SOURCES = $(addprefix $(SRCDIR)/, $(SRCS))
 
