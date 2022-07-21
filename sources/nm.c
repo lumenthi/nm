@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/20 19:15:13 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 11:28:46 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,24 +23,31 @@ static void	append(t_symbol **head, t_symbol *new) {
 	}
 }
 
-/*static void	process_section32(Elf32_Shdr *sheader32, t_section **sections)*/
-/*{*/
-	/*t_section *new = (t_section *)malloc(sizeof(t_section));*/
-	/*if (!new) {*/
-		/*return;*/
-	/*}*/
-	/*new->sym_name = NULL;*/
-	/*new->sh_name = sheader32->sh_name;*/
-	/*new->sh_type = sheader32->sh_type;*/
-	/*new->sh_flags = sheader32->sh_flags;*/
-	/*new->sh_offset = sheader32->sh_offset;*/
-	/*new->arch = 32;*/
-	/*new->next = NULL;*/
-	/*append(sections, new);*/
-/*}*/
+static void	process_symbol32(void *header, Elf32_Sym *sheader32, t_symbol **symbols, t_info infos)
+{
+	/* skip symbols with no name and file symbols */
+	if (!sheader32->st_name || sheader32->st_info == 0x4)
+		return;
+	t_symbol *new = (t_symbol *)malloc(sizeof(t_symbol));
+	if (!new)
+		return;
+	new->sym_name = (char*)(header+infos.strtab_offset)+sheader32->st_name;
+
+	new->st_name = sheader32->st_name;
+	new->st_info = sheader32->st_info;
+	new->st_other = sheader32->st_other;
+	new->st_shndx = sheader32->st_shndx;
+	new->st_value = sheader32->st_value;
+	new->st_size = sheader32->st_size;
+	new->next = NULL;
+	append(symbols, new);
+}
 
 static void	process_symbol64(void *header, Elf64_Sym *sheader64, t_symbol **symbols, t_info infos)
 {
+	/* skip symbols with no name and file symbols */
+	if (!sheader64->st_name || sheader64->st_info == 0x4)
+		return;
 	t_symbol *new = (t_symbol *)malloc(sizeof(t_symbol));
 	if (!new) {
 		return;
@@ -65,7 +72,7 @@ int		get_symbols(void *header, t_info infos, int arch, t_symbol **symbols)
 	if (arch == 32) {
 		while (i * sizeof(Elf32_Sym) < infos.symtab_size) {
 			Sym32 = (Elf32_Sym *)(header+infos.symtab_offset+i*sizeof(Elf32_Sym));
-			(void)Sym32;
+			process_symbol32(header, Sym32, symbols, infos);
 			i++;
 		}
 	}
@@ -86,8 +93,10 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 	size_t shstrndx = 0;
 	uint32_t shsize = 0;
 	uint32_t shnum = 0;
-	uint32_t i = 0;
 	Elf64_Shdr *shstrtab;
+
+	Elf64_Shdr *cursh64;
+	Elf32_Shdr *cursh32;
 
 	// Variables assignment
 	if (arch == 32) {
@@ -116,37 +125,41 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 	// Calculate shstrtab, we use it to get section name
 	shstrtab = (void*)(header + shoff)+(shstrndx*shsize);
 
-	while (i < shnum) {
-		if (((Elf32_Shdr *)(header + shoff + i*shsize))->sh_type == 0x2) { // SYMTAB VALUE
+	while (shnum) {
+		/* sh_type is at the same offset and same size for 32 and 64bits structures */
+		cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
+		if (cursh32->sh_type == 0x2) { // SYMTAB VALUE
 			if (arch == 32) {
-				infos->symtab_offset = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_offset;
-				infos->symtab_size = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_size;
+				infos->symtab_offset = cursh32->sh_offset;
+				infos->symtab_size = cursh32->sh_size;
 			}
 			else {
-				infos->symtab_offset = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_offset;
-				infos->symtab_size = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_size;
+				cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
+				infos->symtab_offset = cursh64->sh_offset;
+				infos->symtab_size = cursh64->sh_size;
 			}
 		}
-		else if (((Elf32_Shdr *)(header + shoff + i*shsize))->sh_type == 0x3) { // STRTAB VALUE
+		else if (cursh32->sh_type == 0x3) { // STRTAB VALUE
 			// Error check
-			if (shstrtab->sh_offset+((Elf32_Shdr *)(header + shoff + i*shsize))->sh_name > size) {
+			if (shstrtab->sh_offset+cursh32->sh_name > size) {
 				ft_putstr_fd("error: nm: invalid sections: ", STDERR_FILENO);
 				ft_putstr_fd(path, STDERR_FILENO);
 				return -1;
 			}
 
-			if (!ft_strcmp((char*)(header+shstrtab->sh_offset+((Elf32_Shdr *)(header + shoff + i*shsize))->sh_name), ".strtab")) {
+			if (!ft_strcmp((char*)(header+shstrtab->sh_offset+cursh32->sh_name), ".strtab")) {
 				if (arch == 32) {
-					infos->strtab_offset = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_offset;
-					infos->strtab_size = ((Elf32_Shdr *)(header + shoff + i*shsize))->sh_size;
+					infos->strtab_offset = cursh32->sh_offset;
+					infos->strtab_size = cursh32->sh_size;
 				}
 				else {
-					infos->strtab_offset = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_offset;
-					infos->strtab_size = ((Elf64_Shdr *)(header + shoff + i*shsize))->sh_size;
+					cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
+					infos->strtab_offset = cursh64->sh_offset;
+					infos->strtab_size = cursh64->sh_size;
 				}
 			}
 		}
-		i++;
+		shnum--;
 	}
 	return 0;
 }
@@ -175,6 +188,7 @@ void	ft_nm(char *path, void *buffer, size_t size)
 		printf("Found string table at offset: %lx with size: %lx\n", infos.strtab_offset,
 			infos.strtab_size);
 		get_symbols((void*)header, infos, arch, &symbols);
+		sort_symbols(&symbols);
 		display_symbols(symbols);
 	}
 }

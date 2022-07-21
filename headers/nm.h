@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/20 19:08:10 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/21 11:28:00 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,8 @@ typedef uint16_t	Elf32_Half;
 typedef uint32_t	Elf32_Off;
 typedef int32_t		Elf32_Sword;
 typedef uint32_t	Elf32_Word;
-
 typedef uint64_t	Elf32_Lword;
+
 typedef uint64_t	Elf64_Addr;
 typedef uint16_t	Elf64_Half;
 typedef uint64_t	Elf64_Off;
@@ -126,10 +126,23 @@ struct Elf64_Sym {
 }; */
 
 typedef struct			s_symbol {
+	// Display values
 	char				*sym_name;
+	char				*sym_type;
 
+	// Raw data
 	Elf64_Word			st_name;
 	unsigned char		st_info;
+	/* #define STB_LOCAL  0
+		#define STB_GLOBAL 1
+		#define STB_WEAK   2
+		#define STT_NOTYPE  0
+		#define STT_OBJECT  1
+		#define STT_FUNC    2
+		#define STT_SECTION 3
+		#define STT_FILE    4
+		#define STT_COMMON  5
+		#define STT_TLS     6 */
 	unsigned char		st_other;
 	Elf64_Half			st_shndx;
 	Elf64_Addr			st_value;
@@ -150,5 +163,6 @@ void	*map_file(char *path, size_t *size);
 
 // LIST.C
 void	display_symbols(t_symbol *symbols);
+void	sort_symbols(t_symbol **head);
 
 #endif
