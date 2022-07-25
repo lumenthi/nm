@@ -6,7 +6,7 @@
 #    By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/12/22 14:06:43 by lumenthi          #+#    #+#              #
-#    Updated: 2022/07/25 18:10:59 by lumenthi         ###   ########.fr        #
+#    Updated: 2022/07/25 18:53:44 by lumenthi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -54,7 +54,9 @@ SRCS = nm.c \
 		map.c \
 		list.c \
 		display.c \
-		swap.c
+		swap.c \
+		section.c \
+		symbol.c
 
 SOURCES = $(addprefix $(SRCDIR)/, $(SRCS))
 

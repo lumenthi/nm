@@ -6,13 +6,14 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/22 13:58:34 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/25 18:55:06 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-static size_t	hex_len(size_t nb) {
+static size_t	hex_len(size_t nb)
+{
 	size_t count = 0;
 	if (nb == 0)
 		return 1;

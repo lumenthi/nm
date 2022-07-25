@@ -6,19 +6,21 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/19 12:50:11 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/19 13:34:11 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/25 18:54:48 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-static void	invalid_file(char *file) {
+static void	invalid_file(char *file)
+{
 	ft_putstr_fd("error: nm: can't open file: ", STDERR_FILENO);
 	ft_putstr_fd(file, STDERR_FILENO);
 	ft_putstr_fd(" (No such file or directory)\n", STDERR_FILENO);
 }
 
-static size_t	file_size(int fd) {
+static size_t	file_size(int fd)
+{
 	struct stat		s_stats;
 	size_t			size;
 
@@ -28,7 +30,8 @@ static size_t	file_size(int fd) {
 	return size;
 }
 
-void	*map_file(char *path, size_t *size) {
+void	*map_file(char *path, size_t *size)
+{
 	void	*buffer;
 	int		fd;
 

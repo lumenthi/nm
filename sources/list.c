@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/22 18:28:48 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/25 18:53:02 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,8 @@ static int		sym_cmp(char *s1b, char *s2b)
 	return (ft_strcmp(s1b, s2b));
 }
 
-void	sort_symbols(t_symbol **head) {
+void	sort_symbols(t_symbol **head)
+{
 	t_symbol *current;
 	t_symbol *next;
 	t_symbol *prev;
@@ -79,6 +80,18 @@ void	sort_symbols(t_symbol **head) {
 				next = next->next;
 			}
 		}
+	}
+}
+
+void	append_symbol(t_symbol **head, t_symbol *new)
+{
+	t_symbol *tmp = *head;
+	if (*head == NULL)
+		*head = new;
+	else {
+		while (tmp->next != NULL)
+			tmp = tmp->next;
+		tmp->next = new;
 	}
 }
 

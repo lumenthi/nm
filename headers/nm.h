@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/25 18:42:12 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/25 18:53:30 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -152,9 +152,17 @@ void		*map_file(char *path, size_t *size);
 // LIST.C
 void		sort_symbols(t_symbol **head);
 void		free_symbols(t_symbol **symbols);
+void		append_symbol(t_symbol **head, t_symbol *new);
+
 
 // DISPLAY.C
 void		display_symbols(t_symbol *symbols, t_info infos);
+
+// SECTION.C
+int			sections_infos(void *header, char *path, int arch, size_t size, t_info *infos);
+
+// SYMBOL.C
+int			get_symbols(void *header, t_info infos, int arch, t_symbol **symbols);
 
 // NM.C
 int			error(char *str, char *path);
