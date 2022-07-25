@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/22 18:34:56 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/25 18:31:35 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,8 +93,8 @@ int		get_symbols(void *header, t_info infos, int arch, t_symbol **symbols)
 int		sections_infos(void *header, char *path, int arch, size_t size,
 						t_info *infos)
 {
-	size_t shoff = 0;
-	size_t shstrndx = 0;
+	uint64_t shoff = 0;
+	uint16_t shstrndx = 0;
 	uint32_t shsize = 0;
 	uint32_t shnum = 0;
 	Elf64_Shdr *shstrtab;
@@ -102,40 +102,44 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 	Elf64_Shdr *cursh64;
 	Elf32_Shdr *cursh32;
 
+	uint64_t shtype = 0;
+
 	// Variables assignment
 	if (arch == 32) {
-		//printf("ELF 32-Bits\n");
-		shoff = (uint32_t)(((Elf32_Ehdr*)header)->e_shoff);
-		shnum = (uint32_t)(((Elf32_Ehdr*)header)->e_shnum);
-		shsize = (uint32_t)(((Elf32_Ehdr*)header)->e_shentsize);
-		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
+		printf("ELF 32-Bits\n");
+		shoff = swap_uint32((uint32_t)(((Elf32_Ehdr*)header)->e_shoff));
+		shnum = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shnum));
+		shsize = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shentsize));
+		shstrndx = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shstrndx));
 	}
 	else {
-		//printf("ELF 64-Bits\n");
+		printf("ELF 64-Bits\n");
 		shoff = (uint64_t)(((Elf64_Ehdr*)header)->e_shoff);
 		shnum = (uint32_t)(((Elf64_Ehdr*)header)->e_shnum);
 		shsize = (uint32_t)(((Elf64_Ehdr*)header)->e_shentsize);
 		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
 	}
-	//printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
-	infos->shdr = header+shoff;
-	infos->section_size = shsize*shnum;
-
+	printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
+	printf("Checking: %ld > %ld || %ld > %ld\n",shoff+shnum*shsize, size, shoff+shstrndx*shsize, size);
 	// Error check
 	if (shoff+shnum*shsize > size || shoff+shstrndx*shsize > size)
 		return error("invalid sections", path);
+
+	infos->shdr = header+shoff;
+	infos->section_size = shsize*shnum;
 
 	// Calculate shstrtab, we use it to get section name
 	shstrtab = (void*)(header + shoff)+(shstrndx*shsize);
 
 	while (shnum) {
-		//printf("Processing section: %d\n", shnum);
+		// printf("Processing section: %d\n", shnum);
 		/* sh_type is at the same offset and same size for 32 and 64bits structures */
 		cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
-		if (cursh32->sh_type == 0x2) { // SYMTAB VALUE
+		shtype = arch == 32 ? swap_uint32(cursh32->sh_type) : cursh32->sh_type;
+		if (shtype == 0x2) { // SYMTAB VALUE
 			if (arch == 32) {
-				infos->symtab_offset = cursh32->sh_offset;
-				infos->symtab_size = cursh32->sh_size;
+				infos->symtab_offset = swap_uint32(cursh32->sh_offset);
+				infos->symtab_size = swap_uint32(cursh32->sh_size);
 			}
 			else {
 				cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
@@ -143,8 +147,7 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 				infos->symtab_size = cursh64->sh_size;
 			}
 		}
-		else if (cursh32->sh_type == 0x3) { // STRTAB VALUE
-			// Error check
+		else if (shtype == 0x3) { // STRTAB VALUE
 			if (shstrtab->sh_offset+cursh32->sh_name > size)
 				return error("invalid sections", path);
 
@@ -205,20 +208,16 @@ int		ft_nm(char *path, void *buffer, size_t size)
 			arch = 64;
 		if (sections_infos((void*)header, path, arch, size, &infos) == -1)
 			return -1;
-		if (infos.symtab_offset == 0 || infos.symtab_size == 0) {
+		if (infos.symtab_offset == 0 || infos.symtab_size == 0)
 			return error("no symbols", path);
-		}
 		//printf("Found symbol table at offset: 0x%lx with size: 0x%lx\n", infos.symtab_offset,
 			//infos.symtab_size);
 		//printf("Found string table at offset: 0x%lx with size: 0x%lx\n", infos.strtab_offset,
 			//infos.strtab_size);
 		get_symbols((void*)header, infos, arch, &symbols);
-		//printf("Sorting symbols...\n");
 		sort_symbols(&symbols);
-		// printf("Sorted symbols\n");
 		display_symbols(symbols, infos);
 		free_symbols(&symbols);
-		// FREE LIST
 	}
 	else
 		return error("file format not recognized", path);
