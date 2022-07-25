@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 15:25:00 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/22 13:58:34 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ static size_t	hex_len(size_t nb) {
 
 static void		display_value(uint64_t value, int arch)
 {
+	//printf("value: 0x%lx\n", value);
 	size_t len;
 	size_t display_len = arch / 4;
 

@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/21 17:05:43 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/22 18:34:56 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,7 @@ int		get_symbols(void *header, t_info infos, int arch, t_symbol **symbols)
 	Elf64_Sym *Sym64 = NULL;
 	if (arch == 32) {
 		while (i * sizeof(Elf32_Sym) < infos.symtab_size) {
+			//printf("Processing symbol: 0x%ld/0x%ld\n", i*sizeof(Elf32_Sym), infos.symtab_size);
 			Sym32 = (Elf32_Sym *)(header+infos.symtab_offset+i*sizeof(Elf32_Sym));
 			process_symbol32(header, Sym32, symbols, infos);
 			i++;
@@ -80,6 +81,7 @@ int		get_symbols(void *header, t_info infos, int arch, t_symbol **symbols)
 	}
 	else {
 		while (i * sizeof(Elf64_Sym) < infos.symtab_size) {
+			//printf("Processing symbol: 0x%ld/0x%ld\n", i*sizeof(Elf64_Sym), infos.symtab_size);
 			Sym64 = (Elf64_Sym *)(header+infos.symtab_offset+i*sizeof(Elf64_Sym));
 			process_symbol64(header, Sym64, symbols, infos);
 			i++;
@@ -102,20 +104,20 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 
 	// Variables assignment
 	if (arch == 32) {
-		// printf("ELF 32-Bits\n");
+		//printf("ELF 32-Bits\n");
 		shoff = (uint32_t)(((Elf32_Ehdr*)header)->e_shoff);
 		shnum = (uint32_t)(((Elf32_Ehdr*)header)->e_shnum);
 		shsize = (uint32_t)(((Elf32_Ehdr*)header)->e_shentsize);
 		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
 	}
 	else {
-		// printf("ELF 64-Bits\n");
+		//printf("ELF 64-Bits\n");
 		shoff = (uint64_t)(((Elf64_Ehdr*)header)->e_shoff);
 		shnum = (uint32_t)(((Elf64_Ehdr*)header)->e_shnum);
 		shsize = (uint32_t)(((Elf64_Ehdr*)header)->e_shentsize);
 		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
 	}
-	// printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
+	//printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
 	infos->shdr = header+shoff;
 	infos->section_size = shsize*shnum;
 
@@ -127,6 +129,7 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 	shstrtab = (void*)(header + shoff)+(shstrndx*shsize);
 
 	while (shnum) {
+		//printf("Processing section: %d\n", shnum);
 		/* sh_type is at the same offset and same size for 32 and 64bits structures */
 		cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
 		if (cursh32->sh_type == 0x2) { // SYMTAB VALUE
@@ -205,13 +208,14 @@ int		ft_nm(char *path, void *buffer, size_t size)
 		if (infos.symtab_offset == 0 || infos.symtab_size == 0) {
 			return error("no symbols", path);
 		}
-		// printf("Found symbol table at offset: 0x%lx with size: 0x%lx\n", infos.symtab_offset,
-			// infos.symtab_size);
-		// printf("Found string table at offset: %lx with size: %lx\n", infos.strtab_offset,
-			// infos.strtab_size);
+		//printf("Found symbol table at offset: 0x%lx with size: 0x%lx\n", infos.symtab_offset,
+			//infos.symtab_size);
+		//printf("Found string table at offset: 0x%lx with size: 0x%lx\n", infos.strtab_offset,
+			//infos.strtab_size);
 		get_symbols((void*)header, infos, arch, &symbols);
+		//printf("Sorting symbols...\n");
 		sort_symbols(&symbols);
-		// t_symbols_display(symbols);
+		// printf("Sorted symbols\n");
 		display_symbols(symbols, infos);
 		free_symbols(&symbols);
 		// FREE LIST
@@ -240,13 +244,25 @@ int		nm(char *path)
 int		main(int argc, char **argv)
 {
 	int i;
+	int ret;
 
 	i = 1;
+	ret = 0;
 	if (argc < 2)
 		nm("a.out");
 	else {
-		while (i < argc)
-			nm(argv[i++]);
+		if (argc == 2)
+			ret = nm(argv[1]);
+		else {
+			while (i < argc) {
+				ft_putstr(argv[i]);
+				ft_putstr(":\n");
+				ret = nm(argv[i]);
+				if (i+1 != argc && ret != 0)
+					ft_putchar('\n');
+				i++;
+			}
+		}
 	}
-	return 0;
+	return ret;
 }
