@@ -6,25 +6,25 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:45:08 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/25 19:01:10 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/26 10:30:25 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-int		sections_infos(void *header, char *path, int arch, size_t size,
-						t_info *infos)
+int				sections_infos(void *header, char *path, int arch, size_t size,
+					t_info *infos)
 {
 	uint64_t shoff = 0;
 	uint16_t shstrndx = 0;
 	uint32_t shsize = 0;
 	uint32_t shnum = 0;
-	Elf64_Shdr *shstrtab;
 
-	Elf64_Shdr *cursh64;
-	Elf32_Shdr *cursh32;
+	Elf32_Shdr *shstrtab32 = NULL;
+	Elf64_Shdr *shstrtab64 = NULL;
 
-	uint64_t shtype = 0;
+	Elf32_Shdr *cursh32 = NULL;
+	Elf64_Shdr *cursh64 = NULL;
 
 	// Variables assignment
 	if (arch == 32) {
@@ -50,39 +50,44 @@ int		sections_infos(void *header, char *path, int arch, size_t size,
 	infos->shdr = header+shoff;
 	infos->section_size = shsize*shnum;
 
-	// Calculate shstrtab, we use it to get section name
-	shstrtab = (void*)(header + shoff)+(shstrndx*shsize);
-
 	while (shnum) {
-		// printf("Processing section: %d\n", shnum);
-		/* sh_type is at the same offset and same size for 32 and 64bits structures */
-		cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
-		shtype = arch == 32 ? swap_uint32(cursh32->sh_type) : cursh32->sh_type;
-		if (shtype == 0x2) { // SYMTAB VALUE
-			if (arch == 32) {
+		if (arch == 32) {
+			cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
+			if (swap_uint32(cursh32->sh_type) == 0x2) { // SYMTAB
 				infos->symtab_offset = swap_uint32(cursh32->sh_offset);
 				infos->symtab_size = swap_uint32(cursh32->sh_size);
 			}
-			else {
-				cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
+			else if (swap_uint32(cursh32->sh_type) == 0x3) { // STRTAB
+				shstrtab32 = (Elf32_Shdr *)((header + shoff)+(shstrndx*shsize));
+				if (swap_uint32(shstrtab32->sh_offset) +
+					swap_uint32(cursh32->sh_name) > size)
+					return error("invalid sections", path);
+				if (!ft_strcmp((char*)(header +
+										swap_uint32(shstrtab32->sh_offset) +
+										swap_uint32(cursh32->sh_name)), ".strtab")) {
+						infos->strtab_offset = swap_uint32(cursh32->sh_offset);
+						infos->strtab_size = swap_uint16(cursh32->sh_size);
+					}
+			}
+		}
+		else {
+			cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
+			if (cursh64->sh_type == 0x2) { // SYMTAB
 				infos->symtab_offset = cursh64->sh_offset;
 				infos->symtab_size = cursh64->sh_size;
 			}
-		}
-		else if (shtype == 0x3) { // STRTAB VALUE
-			if (shstrtab->sh_offset+cursh32->sh_name > size)
-				return error("invalid sections", path);
-
-			if (!ft_strcmp((char*)(header+shstrtab->sh_offset+cursh32->sh_name), ".strtab")) {
-				if (arch == 32) {
-					infos->strtab_offset = cursh32->sh_offset;
-					infos->strtab_size = cursh32->sh_size;
-				}
-				else {
-					cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
-					infos->strtab_offset = cursh64->sh_offset;
-					infos->strtab_size = cursh64->sh_size;
-				}
+			else if (cursh64->sh_type == 0x3) { // STRTAB
+				shstrtab64 = (Elf64_Shdr *)((header + shoff)+(shstrndx*shsize));
+				printf("Checking: %ld+%d=%ld > %ld\n", shstrtab64->sh_offset, cursh64->sh_name,
+					shstrtab64->sh_offset + cursh64->sh_name, size);
+				if (shstrtab64->sh_offset + cursh64->sh_name > size)
+					return error("invalid sections", path);
+				if (!ft_strcmp((char*)(header +
+										shstrtab64->sh_offset +
+										cursh64->sh_name), ".strtab")) {
+						infos->strtab_offset = cursh64->sh_offset;
+						infos->strtab_size = cursh64->sh_size;
+					}
 			}
 		}
 		shnum--;
