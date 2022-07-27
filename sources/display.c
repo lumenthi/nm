@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 15:11:15 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 15:56:02 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,8 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 	uint32_t shtype = swap_uint32(shdr32[symbol->st_shndx].sh_type);
 	uint32_t shflags = swap_uint32(shdr32[symbol->st_shndx].sh_flags);
 
-	// printf("name: %s, shndx: 0x%x, type: 0x%x\n",
-		// symbol->sym_name, symbol->st_shndx, shtype);
+	/*printf("name: %s, shndx: 0x%x, type: 0x%x, flags: 0x%x\n",
+		symbol->sym_name, symbol->st_shndx, shtype, shflags);*/
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
@@ -67,18 +67,17 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 	/* unique global symbol */
 	else if (ELF32_ST_BIND(st_info) == STB_GNU_UNIQUE)
 		letter = 'u';
-	else if (ELF32_ST_BIND(st_info) == STB_WEAK) {
+	else if (ELF32_ST_BIND(st_info) == STB_WEAK && ELF32_ST_TYPE(st_info) == STT_OBJECT) {
+		letter = 'V';
+		if (symbol->st_shndx == SHN_UNDEF)
+			letter = 'v';
+	}	else if (ELF32_ST_BIND(st_info) == STB_WEAK) {
 		letter = 'W';
 		if (symbol->st_shndx == SHN_UNDEF)
 			letter = 'w';
 	}
 	else if (symbol->st_shndx == SHN_UNDEF)
 		letter = 'U';
-	else if (ELF32_ST_BIND(st_info) == STB_WEAK && ELF32_ST_TYPE(st_info) == STT_OBJECT) {
-		letter = 'V';
-		if (symbol->st_shndx == SHN_UNDEF)
-			letter = 'v';
-	}
 
 	/* shdr related analysis */
 
@@ -98,7 +97,10 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 		shtype == SHT_FINI_ARRAY ||
 		shtype == SHT_DYNAMIC)
 		letter = 'D';
-
+	else if (shtype == SHT_PROGBITS && shflags == 0x7)
+		letter = 'T';
+	else if (shtype == SHT_PROGBITS && shflags == 0x12)
+		letter = 'R';
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF32_ST_BIND(st_info) == STB_LOCAL && letter != '?')
 		letter += 32;
@@ -126,18 +128,17 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 	/* unique global symbol */
 	else if (ELF64_ST_BIND(st_info) == STB_GNU_UNIQUE)
 		letter = 'u';
-	else if (ELF64_ST_BIND(st_info) == STB_WEAK) {
+	else if (ELF64_ST_BIND(st_info) == STB_WEAK && ELF64_ST_TYPE(st_info) == STT_OBJECT) {
+		letter = 'V';
+		if (symbol->st_shndx == SHN_UNDEF)
+			letter = 'v';
+	}	else if (ELF64_ST_BIND(st_info) == STB_WEAK) {
 		letter = 'W';
 		if (symbol->st_shndx == SHN_UNDEF)
 			letter = 'w';
 	}
 	else if (symbol->st_shndx == SHN_UNDEF)
 		letter = 'U';
-	else if (ELF64_ST_BIND(st_info) == STB_WEAK && ELF64_ST_TYPE(st_info) == STT_OBJECT) {
-		letter = 'V';
-		if (symbol->st_shndx == SHN_UNDEF)
-			letter = 'v';
-	}
 
 	/* shdr related analysis */
 
@@ -161,7 +162,12 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 		shdr64[symbol->st_shndx].sh_type == SHT_FINI_ARRAY ||
 		shdr64[symbol->st_shndx].sh_type == SHT_DYNAMIC)
 		letter = 'D';
-
+	else if (shdr64[symbol->st_shndx].sh_type == SHT_PROGBITS
+		&& shdr64[symbol->st_shndx].sh_flags == 0x7)
+		letter = 'T';
+	else if (shdr64[symbol->st_shndx].sh_type == SHT_PROGBITS
+		&& shdr64[symbol->st_shndx].sh_flags == 0x12)
+		letter = 'R';
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF64_ST_BIND(st_info) == STB_LOCAL && letter != '?')
 		letter += 32;
