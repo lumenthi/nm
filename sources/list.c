@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/25 18:53:02 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 15:07:59 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,9 @@ static int		sym_cmp(char *s1b, char *s2b)
 	if (!s1 || !s2)
 		return (0);
 	/* must ignore '_' char like real nm */
-	while (*s1 == '_')
+	while (*s1 == '_' || *s1 == '.')
 		s1++;
-	while (*s2 == '_')
+	while (*s2 == '_' || *s2 == '.')
 		s2++;
 	while (s1[i] || s2[j]) {
 		if (s1[i] == '_')

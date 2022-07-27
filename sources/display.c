@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/25 18:55:06 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 15:11:15 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,20 +45,76 @@ static void		display_value(uint64_t value, int arch)
 	ft_puthex(0, 0, value);
 }
 
-static void		display_type32(t_symbol *symbol, t_info infos)
+static char		get_type32(t_symbol *symbol, t_info infos)
 {
-	(void)symbol;
-	(void)infos;
+	/* ELF Sections: https://docs.oracle.com/cd/E19683-01/816-1386/6m7qcoblj/index.html#chapter6-28341 */
+	unsigned char st_info = symbol->st_info;
+	Elf32_Shdr *shdr32 = (Elf32_Shdr *)(infos.shdr);
+	char letter = '?';
+	uint32_t shtype = swap_uint32(shdr32[symbol->st_shndx].sh_type);
+	uint32_t shflags = swap_uint32(shdr32[symbol->st_shndx].sh_flags);
+
+	// printf("name: %s, shndx: 0x%x, type: 0x%x\n",
+		// symbol->sym_name, symbol->st_shndx, shtype);
+
+	/* absolute symbol */
+	if (symbol->st_shndx == SHN_ABS)
+		letter = 'A';
+	/* common symbol*/
+	else if (symbol->st_shndx == SHN_COMMON)
+		letter = 'C';
+
+	/* unique global symbol */
+	else if (ELF32_ST_BIND(st_info) == STB_GNU_UNIQUE)
+		letter = 'u';
+	else if (ELF32_ST_BIND(st_info) == STB_WEAK) {
+		letter = 'W';
+		if (symbol->st_shndx == SHN_UNDEF)
+			letter = 'w';
+	}
+	else if (symbol->st_shndx == SHN_UNDEF)
+		letter = 'U';
+	else if (ELF32_ST_BIND(st_info) == STB_WEAK && ELF32_ST_TYPE(st_info) == STT_OBJECT) {
+		letter = 'V';
+		if (symbol->st_shndx == SHN_UNDEF)
+			letter = 'v';
+	}
+
+	/* shdr related analysis */
+
+	/* Read only data section */
+	else if (shtype == SHT_PROGBITS && shflags == SHF_ALLOC)
+		letter = 'R';
+	/* initialized data section */
+	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_WRITE))
+		letter = 'D';
+	/* text code section */
+	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_EXECINSTR))
+		letter = 'T';
+	/* bss data section */
+	else if (shtype == SHT_NOBITS && shflags == (SHF_ALLOC | SHF_WRITE))
+		letter = 'B';
+	else if (shtype == SHT_INIT_ARRAY ||
+		shtype == SHT_FINI_ARRAY ||
+		shtype == SHT_DYNAMIC)
+		letter = 'D';
+
+	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
+	if (ELF32_ST_BIND(st_info) == STB_LOCAL && letter != '?')
+		letter += 32;
+
+	return letter;
 }
 
-static void		display_type64(t_symbol *symbol, t_info infos)
+static char		get_type64(t_symbol *symbol, t_info infos)
 {
 	/* ELF Sections: https://docs.oracle.com/cd/E19683-01/816-1386/6m7qcoblj/index.html#chapter6-28341 */
 	unsigned char st_info = symbol->st_info;
 	Elf64_Shdr *shdr64 = (Elf64_Shdr *)(infos.shdr);
 	char letter = '?';
 
-	// printf("name: %s, type: 0x%x\n", symbol->sym_name, shdr64[symbol->st_shndx].sh_type);
+	// printf("name: %s, shndx: 0x%x, type: 0x%x\n",
+		// symbol->sym_name, symbol->st_shndx, shdr64[symbol->st_shndx].sh_type);
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
@@ -109,20 +165,23 @@ static void		display_type64(t_symbol *symbol, t_info infos)
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF64_ST_BIND(st_info) == STB_LOCAL && letter != '?')
 		letter += 32;
-	ft_putchar(letter);
+
+	return letter;
 }
 
 void		display_symbols(t_symbol *symbols, t_info infos)
 {
 	t_symbol *tmp = symbols;
+	char letter = '?';
 
 	while (tmp) {
-		display_value(tmp->st_value, tmp->arch);
-		ft_putchar(' ');
 		if (tmp->arch == 64)
-			display_type64(tmp, infos);
+			letter = get_type64(tmp, infos);
 		else
-			display_type32(tmp, infos);
+			letter = get_type32(tmp, infos);
+		letter == 'U' ?  display_value(0, tmp->arch):display_value(tmp->st_value, tmp->arch);
+		ft_putchar(' ');
+		ft_putchar(letter);
 		ft_putchar(' ');
 		ft_putstr(tmp->sym_name);
 		ft_putchar('\n');

@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:51:11 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/26 11:17:52 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 15:06:58 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,9 @@
 
 static void	process_symbol32(void *header, Elf32_Sym *sheader32, t_symbol **symbols, t_info infos)
 {
-	// printf("Processing: %s\n", (char*)(header+infos.strtab_offset)+swap_uint32(sheader32->st_name));
+	/*printf("Processing: %s, st_info: %x, st_shndx: %x\n",
+		(char*)(header+infos.strtab_offset)+swap_uint32(sheader32->st_name),
+		sheader32->st_info, sheader32->st_shndx);*/
 	/* skip symbols with no name and file symbols */
 	if (!swap_uint32(sheader32->st_name) || sheader32->st_info == 0x4)
 		return;
@@ -27,7 +29,7 @@ static void	process_symbol32(void *header, Elf32_Sym *sheader32, t_symbol **symb
 	new->st_name = swap_uint32(sheader32->st_name);
 	new->st_info = sheader32->st_info;
 	new->st_other = sheader32->st_other;
-	new->st_shndx = swap_uint32(sheader32->st_shndx);
+	new->st_shndx = swap_uint16(sheader32->st_shndx);
 	new->st_value = swap_uint32(sheader32->st_value);
 	new->st_size = swap_uint32(sheader32->st_size);
 	new->arch = 32;
