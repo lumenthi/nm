@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/25 18:53:30 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 17:33:01 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,11 @@ typedef struct			s_symbol {
 }						t_symbol;
 
 typedef struct {
+		int				arch;
+		int				swap;
+		size_t			size;
+
+		uint32_t		e_shnum;
 		void			*shdr;
 		Elf64_Word		section_size;
 		Elf64_Off		symtab_offset;
@@ -143,8 +148,8 @@ typedef struct {
 }						t_info;
 
 // SWAP.C
-uint16_t	swap_uint16(uint16_t nb);
-uint32_t	swap_uint32(uint32_t nb);
+uint16_t	swap_uint16(uint16_t nb, int swap);
+uint32_t	swap_uint32(uint32_t nb, int swap);
 
 // MAP.C
 void		*map_file(char *path, size_t *size);
@@ -159,10 +164,10 @@ void		append_symbol(t_symbol **head, t_symbol *new);
 void		display_symbols(t_symbol *symbols, t_info infos);
 
 // SECTION.C
-int			sections_infos(void *header, char *path, int arch, size_t size, t_info *infos);
+int			sections_infos(void *header, char *path, t_info *infos);
 
 // SYMBOL.C
-int			get_symbols(void *header, t_info infos, int arch, t_symbol **symbols);
+int			get_symbols(void *header, t_info infos, t_symbol **symbols);
 
 // NM.C
 int			error(char *str, char *path);

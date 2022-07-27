@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 15:56:02 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 17:40:40 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,14 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 	unsigned char st_info = symbol->st_info;
 	Elf32_Shdr *shdr32 = (Elf32_Shdr *)(infos.shdr);
 	char letter = '?';
-	uint32_t shtype = swap_uint32(shdr32[symbol->st_shndx].sh_type);
-	uint32_t shflags = swap_uint32(shdr32[symbol->st_shndx].sh_flags);
+	uint32_t shtype = 0x00;
+	uint32_t shflags = 0x00;
+
+	// printf("shnum: %d, shndx: %d\n", infos.e_shnum, symbol->st_shndx);
+	if (symbol->st_shndx < infos.e_shnum) {
+		shtype = swap_uint32(shdr32[symbol->st_shndx].sh_type, infos.swap);
+		shflags = swap_uint32(shdr32[symbol->st_shndx].sh_flags, infos.swap);
+	}
 
 	/*printf("name: %s, shndx: 0x%x, type: 0x%x, flags: 0x%x\n",
 		symbol->sym_name, symbol->st_shndx, shtype, shflags);*/
@@ -114,7 +120,14 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 	unsigned char st_info = symbol->st_info;
 	Elf64_Shdr *shdr64 = (Elf64_Shdr *)(infos.shdr);
 	char letter = '?';
+	uint32_t shtype = 0x00;
+	uint32_t shflags = 0x00;
 
+	// printf("shnum: %d, shndx: %d\n", infos.e_shnum, symbol->st_shndx);
+	if (symbol->st_shndx < infos.e_shnum) {
+		shtype = shdr64[symbol->st_shndx].sh_type;
+		shflags = shdr64[symbol->st_shndx].sh_flags;
+	}
 	// printf("name: %s, shndx: 0x%x, type: 0x%x\n",
 		// symbol->sym_name, symbol->st_shndx, shdr64[symbol->st_shndx].sh_type);
 
@@ -143,30 +156,24 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 	/* shdr related analysis */
 
 	/* Read only data section */
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_PROGBITS
-		&& shdr64[symbol->st_shndx].sh_flags == SHF_ALLOC)
+	else if (shtype == SHT_PROGBITS && shflags == SHF_ALLOC)
 		letter = 'R';
 	/* initialized data section */
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_PROGBITS
-		&& shdr64[symbol->st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
+	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_WRITE))
 		letter = 'D';
 	/* text code section */
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_PROGBITS
-		&& shdr64[symbol->st_shndx].sh_flags == (SHF_ALLOC | SHF_EXECINSTR))
+	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_EXECINSTR))
 		letter = 'T';
 	/* bss data section */
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_NOBITS
-		&& shdr64[symbol->st_shndx].sh_flags == (SHF_ALLOC | SHF_WRITE))
+	else if (shtype == SHT_NOBITS && shflags == (SHF_ALLOC | SHF_WRITE))
 		letter = 'B';
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_INIT_ARRAY ||
-		shdr64[symbol->st_shndx].sh_type == SHT_FINI_ARRAY ||
-		shdr64[symbol->st_shndx].sh_type == SHT_DYNAMIC)
+	else if (shtype == SHT_INIT_ARRAY ||
+		shtype == SHT_FINI_ARRAY ||
+		shtype == SHT_DYNAMIC)
 		letter = 'D';
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_PROGBITS
-		&& shdr64[symbol->st_shndx].sh_flags == 0x7)
+	else if (shtype == SHT_PROGBITS && shflags == 0x7)
 		letter = 'T';
-	else if (shdr64[symbol->st_shndx].sh_type == SHT_PROGBITS
-		&& shdr64[symbol->st_shndx].sh_flags == 0x12)
+	else if (shtype == SHT_PROGBITS && shflags == 0x12)
 		letter = 'R';
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF64_ST_BIND(st_info) == STB_LOCAL && letter != '?')

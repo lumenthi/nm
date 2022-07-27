@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/25 18:53:11 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 17:36:59 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,10 @@ static t_info	new_info()
 {
 	t_info infos;
 
+	infos.swap = 0;
+	infos.arch = 32;
+	infos.size = 0;
+	infos.e_shnum = 0;
 	infos.shdr = NULL;
 	infos.section_size = 0;
 	infos.symtab_offset = 0;
@@ -41,7 +45,8 @@ int		ft_nm(char *path, void *buffer, size_t size)
 	Elf32_Ehdr *header = NULL;
 	t_info infos = new_info();
 	t_symbol *symbols = NULL;
-	int arch = 32;
+
+	infos.size = size;
 
 	if (size < sizeof(Elf32_Ehdr) || size < sizeof(Elf64_Ehdr))
 		return error("invalid header", path);
@@ -49,8 +54,10 @@ int		ft_nm(char *path, void *buffer, size_t size)
 	// 0x7f454c46
 	if (*(uint32_t*)header==0x464c457f) { // ELF Magic number
 		if (*(uint8_t*)((void*)header+4) == 2) // EI_CLASS = 2 (64 Bits)
-			arch = 64;
-		if (sections_infos((void*)header, path, arch, size, &infos) == -1)
+			infos.arch = 64;
+		if (*(uint8_t*)((void*)header+5) == 2) // EI_CLASS = 2 (64 Bits)
+			infos.swap = 1;
+		if (sections_infos((void*)header, path, &infos) == -1)
 			return -1;
 		if (infos.symtab_offset == 0 || infos.symtab_size == 0)
 			return error("no symbols", path);
@@ -58,7 +65,7 @@ int		ft_nm(char *path, void *buffer, size_t size)
 			//infos.symtab_size);
 		//printf("Found string table at offset: 0x%lx with size: 0x%lx\n", infos.strtab_offset,
 			//infos.strtab_size);
-		get_symbols((void*)header, infos, arch, &symbols);
+		get_symbols((void*)header, infos, &symbols);
 		sort_symbols(&symbols);
 		display_symbols(symbols, infos);
 		free_symbols(&symbols);

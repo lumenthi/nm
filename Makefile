@@ -6,7 +6,7 @@
 #    By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/12/22 14:06:43 by lumenthi          #+#    #+#              #
-#    Updated: 2022/07/25 18:53:44 by lumenthi         ###   ########.fr        #
+#    Updated: 2022/07/27 17:34:20 by lumenthi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -106,4 +106,5 @@ fclean: clean
 	|| (printf " %b | " $(CROSS) && \
 	printf "No %b%b%b binary\n" $(RED) $(NAME) $(BLANK))
 
-re: fclean all
+re: fclean
+	@ $(MAKE) all

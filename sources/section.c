@@ -6,14 +6,13 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:45:08 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 14:49:02 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/27 17:41:09 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-int				sections_infos(void *header, char *path, int arch, size_t size,
-					t_info *infos)
+int				sections_infos(void *header, char *path, t_info *infos)
 {
 	uint64_t shoff = 0;
 	uint16_t shstrndx = 0;
@@ -27,12 +26,12 @@ int				sections_infos(void *header, char *path, int arch, size_t size,
 	Elf64_Shdr *cursh64 = NULL;
 
 	// Variables assignment
-	if (arch == 32) {
+	if (infos->arch == 32) {
 		// printf("ELF 32-Bits\n");
-		shoff = swap_uint32((uint32_t)(((Elf32_Ehdr*)header)->e_shoff));
-		shnum = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shnum));
-		shsize = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shentsize));
-		shstrndx = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shstrndx));
+		shoff = swap_uint32((uint32_t)(((Elf32_Ehdr*)header)->e_shoff), infos->swap);
+		shnum = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shnum), infos->swap);
+		shsize = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shentsize), infos->swap);
+		shstrndx = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shstrndx), infos->swap);
 	}
 	else {
 		// printf("ELF 64-Bits\n");
@@ -42,31 +41,32 @@ int				sections_infos(void *header, char *path, int arch, size_t size,
 		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
 	}
 	// printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
-	// printf("Checking: %ld > %ld || %ld > %ld\n",shoff+shnum*shsize, size, shoff+shstrndx*shsize, size);
+	// printf("Checking: %ld > %ld || %ld > %ld\n", shoff+shnum*shsize, size, shoff+shstrndx*shsize, size);
 	// Error check
-	if (shoff+shnum*shsize > size || shoff+shstrndx*shsize > size)
+	if (shoff+shnum*shsize > infos->size || shoff+shstrndx*shsize > infos->size)
 		return error("invalid sections", path);
 
 	infos->shdr = header+shoff;
 	infos->section_size = shsize*shnum;
+	infos->e_shnum = shnum;
 
 	while (shnum) {
-		if (arch == 32) {
+		if (infos->arch == 32) {
 			cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
-			if (swap_uint32(cursh32->sh_type) == 0x2) { // SYMTAB
-				infos->symtab_offset = swap_uint32(cursh32->sh_offset);
-				infos->symtab_size = swap_uint32(cursh32->sh_size);
+			if (swap_uint32(cursh32->sh_type, infos->swap) == 0x2) { // SYMTAB
+				infos->symtab_offset = swap_uint32(cursh32->sh_offset, infos->swap);
+				infos->symtab_size = swap_uint32(cursh32->sh_size, infos->swap);
 			}
-			else if (swap_uint32(cursh32->sh_type) == 0x3) { // STRTAB
+			else if (swap_uint32(cursh32->sh_type, infos->swap) == 0x3) { // STRTAB
 				shstrtab32 = (Elf32_Shdr *)((header + shoff)+(shstrndx*shsize));
-				if (swap_uint32(shstrtab32->sh_offset) +
-					swap_uint32(cursh32->sh_name) > size)
+				if (swap_uint32(shstrtab32->sh_offset, infos->swap) +
+					swap_uint32(cursh32->sh_name, infos->swap) > infos->size)
 					return error("invalid sections", path);
 				if (!ft_strcmp((char*)(header +
-										swap_uint32(shstrtab32->sh_offset) +
-										swap_uint32(cursh32->sh_name)), ".strtab")) {
-						infos->strtab_offset = swap_uint32(cursh32->sh_offset);
-						infos->strtab_size = swap_uint16(cursh32->sh_size);
+										swap_uint32(shstrtab32->sh_offset, infos->swap) +
+										swap_uint32(cursh32->sh_name, infos->swap)), ".strtab")) {
+						infos->strtab_offset = swap_uint32(cursh32->sh_offset, infos->swap);
+						infos->strtab_size = swap_uint16(cursh32->sh_size, infos->swap);
 					}
 			}
 		}
@@ -80,7 +80,7 @@ int				sections_infos(void *header, char *path, int arch, size_t size,
 				shstrtab64 = (Elf64_Shdr *)((header + shoff)+(shstrndx*shsize));
 				// printf("Checking: %ld+%d=%ld > %ld\n", shstrtab64->sh_offset, cursh64->sh_name,
 					// shstrtab64->sh_offset + cursh64->sh_name, size);
-				if (shstrtab64->sh_offset + cursh64->sh_name > size)
+				if (shstrtab64->sh_offset + cursh64->sh_name > infos->size)
 					return error("invalid sections", path);
 				if (!ft_strcmp((char*)(header +
 										shstrtab64->sh_offset +
