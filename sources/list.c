@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 15:07:59 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 11:33:12 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,9 @@ static int		sym_cmp(char *s1b, char *s2b)
 	while (*s2 == '_' || *s2 == '.')
 		s2++;
 	while (s1[i] || s2[j]) {
-		if (s1[i] == '_')
+		while (s1[i] && (s1[i] == '_' || s1[i] == '@'))
 			i++;
-		if (s2[j] == '_')
+		while (s2[j] && (s2[j] == '_' || s2[j] == '@'))
 			j++;
 		s1_c = ft_tolower(s1[i]);
 		s2_c = ft_tolower(s2[j]);

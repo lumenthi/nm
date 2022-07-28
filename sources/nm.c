@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 17:36:59 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 10:42:17 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,18 +45,32 @@ int		ft_nm(char *path, void *buffer, size_t size)
 	Elf32_Ehdr *header = NULL;
 	t_info infos = new_info();
 	t_symbol *symbols = NULL;
+	uint32_t e_type = 0x00;
 
 	infos.size = size;
 
 	if (size < sizeof(Elf32_Ehdr) || size < sizeof(Elf64_Ehdr))
-		return error("invalid header", path);
+		return error("file format not recognized", path);
 	header = (Elf32_Ehdr *)buffer;
 	// 0x7f454c46
 	if (*(uint32_t*)header==0x464c457f) { // ELF Magic number
 		if (*(uint8_t*)((void*)header+4) == 2) // EI_CLASS = 2 (64 Bits)
 			infos.arch = 64;
-		if (*(uint8_t*)((void*)header+5) == 2) // EI_CLASS = 2 (64 Bits)
+		else if (*(uint8_t*)((void*)header+4) != 1)
+			return error("file format not recognized", path);
+
+		if (*(uint8_t*)((void*)header+5) == 2) // EI_DATA = 2 (Swap bits)
 			infos.swap = 1;
+		else if (*(uint8_t*)((void*)header+5) != 1)
+			return error("file format not recognized", path);
+
+		e_type = infos.swap == 1 ? swap_uint16(header->e_type, 1):header->e_type;
+
+		if (e_type!=ET_NONE&&e_type!=ET_REL&&e_type!=ET_EXEC
+		&&e_type!=ET_DYN&&e_type!=ET_CORE&&e_type!=ET_LOOS
+		&&e_type!=ET_HIOS&&e_type!=ET_LOPROC&&e_type!=ET_HIPROC)
+			return error("file format not recognized", path);
+
 		if (sections_infos((void*)header, path, &infos) == -1)
 			return -1;
 		if (infos.symtab_offset == 0 || infos.symtab_size == 0)

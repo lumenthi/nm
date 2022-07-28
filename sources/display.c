@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 17:40:40 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 11:24:07 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,7 +192,8 @@ void		display_symbols(t_symbol *symbols, t_info infos)
 			letter = get_type64(tmp, infos);
 		else
 			letter = get_type32(tmp, infos);
-		letter == 'U' ?  display_value(0, tmp->arch):display_value(tmp->st_value, tmp->arch);
+		letter == 'U' || letter == 'w' ?
+			display_value(0, tmp->arch):display_value(tmp->st_value, tmp->arch);
 		ft_putchar(' ');
 		ft_putchar(letter);
 		ft_putchar(' ');
