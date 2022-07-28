@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 12:24:55 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 15:18:39 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,8 +128,9 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 		shtype = shdr64[symbol->st_shndx].sh_type;
 		shflags = shdr64[symbol->st_shndx].sh_flags;
 	}
-	// printf("name: %s, shndx: 0x%x, type: 0x%x\n",
-		// symbol->sym_name, symbol->st_shndx, shdr64[symbol->st_shndx].sh_type);
+	//printf("name: %s, shndx: 0x%x, type: 0x%x, bind: 0x%x\n",
+	//	symbol->sym_name, symbol->st_shndx, shdr64[symbol->st_shndx].sh_type,
+	//	ELF64_ST_BIND(st_info));
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
@@ -196,23 +197,32 @@ void		display_symbols(t_symbol *symbols, t_info infos)
 {
 	t_symbol *tmp = symbols;
 	char letter = '?';
+	uint8_t debug = infos.args & 0x10;
+	uint8_t ext = infos.args & 0x08;
 
 	while (tmp) {
-		if (tmp->arch == 64)
-			letter = get_type64(tmp, infos);
-		else
-			letter = get_type32(tmp, infos);
-		if (letter == 'U' || letter == 'w')
-			display_value(0, tmp->arch);
-		else if ((letter == 't' || letter == 'T') && !tmp->st_value)
-			display_zeroes(tmp->arch);
-		else
-			display_value(tmp->st_value, tmp->arch);
-		ft_putchar(' ');
-		ft_putchar(letter);
-		ft_putchar(' ');
-		ft_putstr(tmp->sym_name);
-		ft_putchar('\n');
+		/* skip symbols with no name and file symbols */
+		if (tmp->st_name &&
+			((!debug && (tmp->st_info != 0x4))||(debug)) &&
+			(!ext || (ext && ELF64_ST_BIND(tmp->st_info) != 0x00))
+		) {
+			if (tmp->arch == 64)
+				letter = get_type64(tmp, infos);
+			else
+				letter = get_type32(tmp, infos);
+			if (letter == 'U' || letter == 'w')
+				display_value(0, tmp->arch);
+			else if ((letter == 't' || letter == 'T' || letter == 'a')
+				&& !tmp->st_value)
+				display_zeroes(tmp->arch);
+			else
+				display_value(tmp->st_value, tmp->arch);
+			ft_putchar(' ');
+			ft_putchar(letter);
+			ft_putchar(' ');
+			ft_putstr(tmp->sym_name);
+			ft_putchar('\n');
+		}
 		tmp = tmp->next;
 	}
 }

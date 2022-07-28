@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:51:11 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 16:35:09 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 14:51:50 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,10 @@
 
 static void	process_symbol32(void *header, Elf32_Sym *sheader32, t_symbol **symbols, t_info infos)
 {
-	/*printf("Processing: %s, st_info: %x, st_shndx: %x\n",
-		(char*)(header+infos.strtab_offset)+swap_uint32(sheader32->st_name),
-		sheader32->st_info, sheader32->st_shndx);*/
-	/* skip symbols with no name and file symbols */
-	if (!swap_uint32(sheader32->st_name, infos.swap) || sheader32->st_info == 0x4)
-		return;
 	t_symbol *new = (t_symbol *)malloc(sizeof(t_symbol));
+
 	if (!new)
 		return;
-
 	new->sym_name = (char*)(header+infos.strtab_offset)+
 		swap_uint32(sheader32->st_name, infos.swap);
 
@@ -40,13 +34,10 @@ static void	process_symbol32(void *header, Elf32_Sym *sheader32, t_symbol **symb
 
 static void	process_symbol64(void *header, Elf64_Sym *sheader64, t_symbol **symbols, t_info infos)
 {
-	/* skip symbols with no name and file symbols */
-	if (!sheader64->st_name || sheader64->st_info == 0x4)
-		return;
 	t_symbol *new = (t_symbol *)malloc(sizeof(t_symbol));
-	if (!new) {
+
+	if (!new)
 		return;
-	}
 	new->sym_name = (char*)(header+infos.strtab_offset)+sheader64->st_name;
 
 	new->st_name = sheader64->st_name;
