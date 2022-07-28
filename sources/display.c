@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 15:18:39 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 15:25:21 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,12 +199,14 @@ void		display_symbols(t_symbol *symbols, t_info infos)
 	char letter = '?';
 	uint8_t debug = infos.args & 0x10;
 	uint8_t ext = infos.args & 0x08;
+	uint8_t undef = infos.args & 0x04;
 
 	while (tmp) {
 		/* skip symbols with no name and file symbols */
 		if (tmp->st_name &&
 			((!debug && (tmp->st_info != 0x4))||(debug)) &&
-			(!ext || (ext && ELF64_ST_BIND(tmp->st_info) != 0x00))
+			(!ext || (ext && ELF64_ST_BIND(tmp->st_info) != 0x00)) &&
+			(!undef || (undef && tmp->st_shndx == STN_UNDEF))
 		) {
 			if (tmp->arch == 64)
 				letter = get_type64(tmp, infos);
