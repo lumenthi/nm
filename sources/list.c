@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 13:45:12 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 15:28:38 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,11 @@ void	sort_symbols(t_symbol **head, t_info infos)
 	t_symbol *next;
 	t_symbol *prev;
 	uint8_t value = 0;
-
 	int sorted = 0;
+
+	if (infos.args & 0x01)
+		return;
+
 	if (*head == NULL || (*head)->next == NULL)
 		return;
 	while (!sorted) {
