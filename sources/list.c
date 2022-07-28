@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 11:33:12 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 13:45:12 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,11 +47,12 @@ static int		sym_cmp(char *s1b, char *s2b)
 	return (ft_strcmp(s1b, s2b));
 }
 
-void	sort_symbols(t_symbol **head)
+void	sort_symbols(t_symbol **head, t_info infos)
 {
 	t_symbol *current;
 	t_symbol *next;
 	t_symbol *prev;
+	uint8_t value = 0;
 
 	int sorted = 0;
 	if (*head == NULL || (*head)->next == NULL)
@@ -62,7 +63,10 @@ void	sort_symbols(t_symbol **head)
 		next = current->next;
 		sorted = 1;
 		while (next) {
-			if (sym_cmp(current->sym_name, next->sym_name) > 0) {
+			value = infos.args & 0x02 ?
+				sym_cmp(current->sym_name, next->sym_name) < 0:
+				sym_cmp(current->sym_name, next->sym_name) > 0;
+			if (value) {
 				if (prev)
 					prev->next = next;
 				else

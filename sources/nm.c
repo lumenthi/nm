@@ -6,19 +6,20 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 12:27:21 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 13:51:16 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-static t_info	new_info()
+static t_info	new_info(size_t size, uint8_t args)
 {
 	t_info infos;
 
 	infos.swap = 0;
 	infos.arch = 32;
-	infos.size = 0;
+	infos.size = size;
+	infos.args = args;
 	infos.e_shnum = 0;
 	infos.shdr = NULL;
 	infos.section_size = 0;
@@ -40,19 +41,16 @@ int		error(char *str, char *path)
 	return 1;
 }
 
-int		ft_nm(char *path, void *buffer, size_t size)
+int		ft_nm(char *path, void *buffer, size_t size, uint8_t args)
 {
 	Elf32_Ehdr *header = NULL;
-	t_info infos = new_info();
+	t_info infos = new_info(size, args);
 	t_symbol *symbols = NULL;
 	uint32_t e_type = 0x00;
-
-	infos.size = size;
 
 	if (size < sizeof(Elf32_Ehdr) || size < sizeof(Elf64_Ehdr))
 		return error("file format not recognized", path);
 	header = (Elf32_Ehdr *)buffer;
-	// 0x7f454c46
 	if (*(uint32_t*)header==0x464c457f) { // ELF Magic number
 		if (*(uint8_t*)((void*)header+4) == 2) // EI_CLASS = 2 (64 Bits)
 			infos.arch = 64;
@@ -80,18 +78,16 @@ int		ft_nm(char *path, void *buffer, size_t size)
 		//printf("Found string table at offset: 0x%lx with size: 0x%lx\n", infos.strtab_offset,
 			//infos.strtab_size);
 		get_symbols((void*)header, infos, &symbols);
-		sort_symbols(&symbols);
+		sort_symbols(&symbols, infos);
 		display_symbols(symbols, infos);
 		free_symbols(&symbols);
 	}
-	/*else if (*(uint64_t*)header==0x0a3e686372613c21) // !<arch> AR magic number
-		error("not handling ar files", path);*/
 	else
 		return error("file format not recognized", path);
 	return 0;
 }
 
-int		nm(char *path)
+int		nm(char *path, uint8_t args)
 {
 	void	*buffer;
 	size_t	size;
@@ -101,33 +97,65 @@ int		nm(char *path)
 	ret = -1;
 	buffer = map_file(path, &size);
 	if (buffer) {
-		ret = ft_nm(path, buffer, size);
+		ret = ft_nm(path, buffer, size, args);
 		munmap(buffer, size);
 	}
 	return ret;
+}
+
+void	get_args(int argc, char **argv, uint8_t *args, size_t *nb_args)
+{
+	int i = 1;
+	int j = 0;
+	while (i < argc) {
+		if (argv[i] && argv[i][0] == '-') {
+			j = 0;
+			while (argv[i][j]) {
+				if (argv[i][j] == 'a')
+					(*args) |= 0x10; // 0001 0000
+				else if (argv[i][j] == 'g')
+					(*args) |= 0x08; // 0000 1000
+				else if (argv[i][j] == 'u')
+					(*args) |= 0x04; // 0000 0100
+				else if (argv[i][j] == 'r')
+					(*args) |= 0x02; // 0000 0010
+				else if (argv[i][j] == 'p')
+					(*args) |= 0x01; // 0000 0001
+				j++;
+			}
+		}
+		else if (argv[i] && argv[i][0] != '-')
+			(*nb_args)++;
+		i++;
+	}
 }
 
 int		main(int argc, char **argv)
 {
 	int i;
 	int ret;
+	size_t nb_args = 0;
+	uint8_t args = 0x00; // -a -g -u -r -p
+	size_t count = 0;
 
+	get_args(argc, argv, &args, &nb_args);
 	i = 1;
 	ret = 0;
-	if (argc < 2)
-		nm("a.out");
+	if (nb_args == 0)
+		nm("a.out", args);
 	else {
-		if (argc == 2)
-			ret = nm(argv[1]);
-		else {
-			while (i < argc) {
-				ft_putstr(argv[i]);
-				ft_putstr(":\n");
-				ret = nm(argv[i]);
-				if (i+1 != argc && ret >= 0)
+		while (i < argc) {
+			if (argv[i] && argv[i][0] != '-') {
+				if (nb_args > 1) {
+					ft_putstr(argv[i]);
+					ft_putstr(":\n");
+				}
+				ret = nm(argv[i], args);
+				if (count < nb_args-1 && ret >= 0)
 					ft_putchar('\n');
-				i++;
+				count++;
 			}
+			i++;
 		}
 	}
 	return ret;

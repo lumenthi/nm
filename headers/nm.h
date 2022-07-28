@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 12:15:47 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 13:43:34 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,6 +138,7 @@ typedef struct {
 		int				arch;
 		int				swap;
 		size_t			size;
+		uint8_t			args;
 
 		uint32_t		e_shnum;
 		void			*shdr;
@@ -156,7 +157,7 @@ uint32_t	swap_uint32(uint32_t nb, int swap);
 void		*map_file(char *path, size_t *size);
 
 // LIST.C
-void		sort_symbols(t_symbol **head);
+void		sort_symbols(t_symbol **head, t_info infos);
 void		free_symbols(t_symbol **symbols);
 void		append_symbol(t_symbol **head, t_symbol *new);
 
