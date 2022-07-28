@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 10:42:17 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 12:27:21 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,8 @@ int		ft_nm(char *path, void *buffer, size_t size)
 		display_symbols(symbols, infos);
 		free_symbols(&symbols);
 	}
+	/*else if (*(uint64_t*)header==0x0a3e686372613c21) // !<arch> AR magic number
+		error("not handling ar files", path);*/
 	else
 		return error("file format not recognized", path);
 	return 0;
@@ -96,7 +98,7 @@ int		nm(char *path)
 	int		ret;
 
 	size = 0;
-	ret = 0;
+	ret = -1;
 	buffer = map_file(path, &size);
 	if (buffer) {
 		ret = ft_nm(path, buffer, size);
@@ -122,7 +124,7 @@ int		main(int argc, char **argv)
 				ft_putstr(argv[i]);
 				ft_putstr(":\n");
 				ret = nm(argv[i]);
-				if (i+1 != argc && ret != 0)
+				if (i+1 != argc && ret >= 0)
 					ft_putchar('\n');
 				i++;
 			}

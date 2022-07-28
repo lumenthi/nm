@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 17:33:01 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 12:15:47 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 #include <fcntl.h> // OPEN
 #include <elf.h> // ELF RELATED STRUCTURES
 #include <stdlib.h> // MALLOC
+#include <ar.h> // AR FILES
 
 // STRUCTURES
 // HEADER

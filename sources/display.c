@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 11:24:07 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/28 12:24:55 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,6 +182,16 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 	return letter;
 }
 
+static void		display_zeroes(int arch)
+{
+	size_t display_len = arch / 4;
+
+	while (display_len) {
+		ft_putchar('0');
+		display_len--;
+	}
+}
+
 void		display_symbols(t_symbol *symbols, t_info infos)
 {
 	t_symbol *tmp = symbols;
@@ -192,8 +202,12 @@ void		display_symbols(t_symbol *symbols, t_info infos)
 			letter = get_type64(tmp, infos);
 		else
 			letter = get_type32(tmp, infos);
-		letter == 'U' || letter == 'w' ?
-			display_value(0, tmp->arch):display_value(tmp->st_value, tmp->arch);
+		if (letter == 'U' || letter == 'w')
+			display_value(0, tmp->arch);
+		else if ((letter == 't' || letter == 'T') && !tmp->st_value)
+			display_zeroes(tmp->arch);
+		else
+			display_value(tmp->st_value, tmp->arch);
 		ft_putchar(' ');
 		ft_putchar(letter);
 		ft_putchar(' ');
