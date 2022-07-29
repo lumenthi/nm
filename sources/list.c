@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 13:04:08 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 16:37:27 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 /* HELL sorting functions to match NM output */
 
-static int		sym_cmp(t_symbol *s1b, t_symbol *s2b)
+static int		sym_cmp(t_symbol *s1b, t_symbol *s2b, t_info infos)
 {
 	int i;
 	int j;
@@ -46,7 +46,10 @@ static int		sym_cmp(t_symbol *s1b, t_symbol *s2b)
 		i++;
 		j++;
 	}
+	(void)infos;
 	/* This is horrible but it matches the nm algo */
+	if (s1b->st_value == s2b->st_value)
+		return ft_strcmp(s1b->sym_name, s2b->sym_name);
 	return ft_strcmp(s2b->sym_name, s1b->sym_name);
 }
 
@@ -70,8 +73,8 @@ void	sort_symbols(t_symbol **head, t_info infos)
 		sorted = 1;
 		while (next) {
 			value = infos.args & 0x02 ?
-				sym_cmp(next, current):
-				sym_cmp(current, next);
+				sym_cmp(next, current, infos):
+				sym_cmp(current, next, infos);
 			if (value == 0)
 				value = current->st_value - next->st_value;
 			if (value > 0) {

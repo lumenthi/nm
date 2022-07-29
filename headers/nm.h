@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 10:11:28 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 13:53:35 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,6 +139,7 @@ typedef struct {
 		size_t			size;
 		uint8_t			args;
 
+		uint32_t		e_type;
 		uint32_t		e_shnum;
 		void			*shdr;
 		Elf64_Word		section_size;

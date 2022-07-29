@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 11:51:59 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 16:55:32 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@ static size_t	hex_len(size_t nb)
 
 static void		display_value(uint64_t value, int arch)
 {
-	//printf("value: 0x%lx\n", value);
 	size_t len;
 	size_t display_len = arch / 4;
 
@@ -71,7 +70,8 @@ static char		section_finder(t_symbol *symbol, uint32_t shtype, uint32_t shflags)
 			!ft_strncmp(symbol->sect_name, ".interp\0", 8) ||
 			!ft_strncmp(symbol->sect_name, ".eh_frame_hdr\0", 14) ||
 			!ft_strncmp(symbol->sect_name, ".gcc_except_table\0", 18) ||
-			!ft_strncmp(symbol->sect_name, ".rodata.cst4\0", 13)
+			!ft_strncmp(symbol->sect_name, ".rodata.str", 11) ||
+			!ft_strncmp(symbol->sect_name, ".rodata.cst", 11)
 		))
 	)
 		letter = 'R';
@@ -227,9 +227,7 @@ void		display_symbols(t_symbol *symbols, t_info infos)
 				letter = get_type32(tmp, infos);
 			if (letter == 'U' || letter == 'w')
 				display_value(0, tmp->arch);
-			else if ((letter == 't' || letter == 'T' || letter == 'a' ||
-				letter == 'b')
-				&& !tmp->st_value)
+			else if (!tmp->st_value)
 				display_zeroes(tmp->arch);
 			else
 				display_value(tmp->st_value, tmp->arch);
