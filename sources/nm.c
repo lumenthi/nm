@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 13:52:45 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 17:10:56 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,8 +68,6 @@ int		ft_nm(char *path, void *buffer, size_t size, uint8_t args)
 		&&e_type!=ET_DYN&&e_type!=ET_CORE&&e_type!=ET_LOOS
 		&&e_type!=ET_HIOS&&e_type!=ET_LOPROC&&e_type!=ET_HIPROC)
 			return error("file format not recognized", path);
-
-		infos.e_type = e_type;
 
 		if (sections_infos((void*)header, path, &infos) == -1)
 			return -1;
