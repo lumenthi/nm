@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:45:08 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/27 17:41:09 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 10:13:16 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,12 @@ int				sections_infos(void *header, char *path, t_info *infos)
 						infos->strtab_offset = swap_uint32(cursh32->sh_offset, infos->swap);
 						infos->strtab_size = swap_uint16(cursh32->sh_size, infos->swap);
 					}
+				else if (!ft_strcmp((char*)(header +
+										swap_uint32(shstrtab32->sh_offset, infos->swap) +
+										swap_uint32(cursh32->sh_name, infos->swap)), ".shstrtab")) {
+						infos->shstrtab_offset = swap_uint32(cursh32->sh_offset, infos->swap);
+						infos->shstrtab_size = swap_uint16(cursh32->sh_size, infos->swap);
+					}
 			}
 		}
 		else {
@@ -78,8 +84,6 @@ int				sections_infos(void *header, char *path, t_info *infos)
 			}
 			else if (cursh64->sh_type == 0x3) { // STRTAB
 				shstrtab64 = (Elf64_Shdr *)((header + shoff)+(shstrndx*shsize));
-				// printf("Checking: %ld+%d=%ld > %ld\n", shstrtab64->sh_offset, cursh64->sh_name,
-					// shstrtab64->sh_offset + cursh64->sh_name, size);
 				if (shstrtab64->sh_offset + cursh64->sh_name > infos->size)
 					return error("invalid sections", path);
 				if (!ft_strcmp((char*)(header +
@@ -87,6 +91,12 @@ int				sections_infos(void *header, char *path, t_info *infos)
 										cursh64->sh_name), ".strtab")) {
 						infos->strtab_offset = cursh64->sh_offset;
 						infos->strtab_size = cursh64->sh_size;
+					}
+				else if (!ft_strcmp((char*)(header +
+										shstrtab64->sh_offset +
+										cursh64->sh_name), ".shstrtab")) {
+						infos->shstrtab_offset = cursh64->sh_offset;
+						infos->shstrtab_size = cursh64->sh_size;
 					}
 			}
 		}

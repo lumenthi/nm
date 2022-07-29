@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 15:25:21 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 10:31:14 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,9 +128,9 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 		shtype = shdr64[symbol->st_shndx].sh_type;
 		shflags = shdr64[symbol->st_shndx].sh_flags;
 	}
-	//printf("name: %s, shndx: 0x%x, type: 0x%x, bind: 0x%x\n",
-	//	symbol->sym_name, symbol->st_shndx, shdr64[symbol->st_shndx].sh_type,
-	//	ELF64_ST_BIND(st_info));
+	/*printf("name: %s, shndx: 0x%x, type: 0x%x, bind: 0x%x\n",
+		symbol->sym_name, symbol->st_shndx, shtype,
+		ELF64_ST_BIND(st_info));*/
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
@@ -155,9 +155,29 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 		letter = 'U';
 
 	/* shdr related analysis */
+	/*
+      {'b', ".bss\0"},
+      {'t', ".text\0"},
+      {'t', ".init\0"},
+      {'t', ".fini\0"},
+      {'d', ".data\0"},
+      {'d', ".got.plt\0"},
+      {'d', ".init_array\0"},
+      {'d', ".dynamic\0"},
+      {'d', ".fini_array\0"},
+      {'r', ".rodata\0"},
+      {'r', ".eh_frame\0"},
+      {'r', ".eh_frame_hdr\0"},
+      {'r', ".gcc_except_table\0"}
+	*/
 
 	/* Read only data section */
-	else if (shtype == SHT_PROGBITS && shflags == SHF_ALLOC)
+	else if (shtype == SHT_PROGBITS && symbol->sect_name && (
+		!ft_strncmp(symbol->sect_name, ".rodata\0", 8) ||
+		!ft_strncmp(symbol->sect_name, ".eh_frame\0", 10) ||
+		!ft_strncmp(symbol->sect_name, ".eh_frame_hdr\0", 14) ||
+		!ft_strncmp(symbol->sect_name, ".gcc_except_table\0", 18)
+	))
 		letter = 'R';
 	/* initialized data section */
 	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_WRITE))
@@ -172,10 +192,6 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 		shtype == SHT_FINI_ARRAY ||
 		shtype == SHT_DYNAMIC)
 		letter = 'D';
-	else if (shtype == SHT_PROGBITS && shflags == 0x7)
-		letter = 'T';
-	else if (shtype == SHT_PROGBITS && shflags == 0x12)
-		letter = 'R';
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF64_ST_BIND(st_info) == STB_LOCAL && letter != '?')
 		letter += 32;

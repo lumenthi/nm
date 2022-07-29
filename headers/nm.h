@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 13:43:34 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 10:11:28 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,8 +111,7 @@ struct Elf64_Sym {
 typedef struct			s_symbol {
 	// Display values
 	char				*sym_name;
-	char				*sym_type;
-
+	char				*sect_name;
 	// Raw data
 	Elf64_Word			st_name;
 	unsigned char		st_info;
@@ -147,6 +146,8 @@ typedef struct {
 		Elf64_Xword		symtab_size;
 		Elf64_Off		strtab_offset;
 		Elf32_Xword		strtab_size;
+		Elf64_Off		shstrtab_offset;
+		Elf32_Xword		shstrtab_size;
 }						t_info;
 
 // SWAP.C
@@ -160,7 +161,6 @@ void		*map_file(char *path, size_t *size);
 void		sort_symbols(t_symbol **head, t_info infos);
 void		free_symbols(t_symbol **symbols);
 void		append_symbol(t_symbol **head, t_symbol *new);
-
 
 // DISPLAY.C
 void		display_symbols(t_symbol *symbols, t_info infos);

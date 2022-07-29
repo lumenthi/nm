@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:51:11 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 14:51:50 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 10:23:14 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,19 @@
 static void	process_symbol32(void *header, Elf32_Sym *sheader32, t_symbol **symbols, t_info infos)
 {
 	t_symbol *new = (t_symbol *)malloc(sizeof(t_symbol));
+	uint32_t sh_name = 0;
 
 	if (!new)
 		return;
 	new->sym_name = (char*)(header+infos.strtab_offset)+
 		swap_uint32(sheader32->st_name, infos.swap);
+
+	new->sect_name = NULL;
+	Elf32_Shdr *shdr = (Elf32_Shdr*)(infos.shdr);
+	if (swap_uint16(sheader32->st_shndx, infos.swap) < infos.e_shnum) {
+		sh_name = shdr[swap_uint16(sheader32->st_shndx, infos.swap)].sh_name;
+		new->sect_name = (char*)(header+infos.shstrtab_offset)+swap_uint32(sh_name, infos.swap);
+	}
 
 	new->st_name = swap_uint32(sheader32->st_name, infos.swap);
 	new->st_info = sheader32->st_info;
@@ -35,10 +43,18 @@ static void	process_symbol32(void *header, Elf32_Sym *sheader32, t_symbol **symb
 static void	process_symbol64(void *header, Elf64_Sym *sheader64, t_symbol **symbols, t_info infos)
 {
 	t_symbol *new = (t_symbol *)malloc(sizeof(t_symbol));
+	uint64_t sh_name = 0;
 
 	if (!new)
 		return;
 	new->sym_name = (char*)(header+infos.strtab_offset)+sheader64->st_name;
+
+	new->sect_name = NULL;
+	Elf64_Shdr *shdr = (Elf64_Shdr*)(infos.shdr);
+	if (sheader64->st_shndx < infos.e_shnum) {
+		sh_name = shdr[sheader64->st_shndx].sh_name;
+		new->sect_name = (char*)(header+infos.shstrtab_offset)+sh_name;
+	}
 
 	new->st_name = sheader64->st_name;
 	new->st_info = sheader64->st_info;
