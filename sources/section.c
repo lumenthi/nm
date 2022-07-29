@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:45:08 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 10:13:16 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 10:40:15 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,15 +62,15 @@ int				sections_infos(void *header, char *path, t_info *infos)
 				if (swap_uint32(shstrtab32->sh_offset, infos->swap) +
 					swap_uint32(cursh32->sh_name, infos->swap) > infos->size)
 					return error("invalid sections", path);
-				if (!ft_strcmp((char*)(header +
+				if (!ft_strncmp((char*)(header +
 										swap_uint32(shstrtab32->sh_offset, infos->swap) +
-										swap_uint32(cursh32->sh_name, infos->swap)), ".strtab")) {
+										swap_uint32(cursh32->sh_name, infos->swap)), ".strtab\0", 8)) {
 						infos->strtab_offset = swap_uint32(cursh32->sh_offset, infos->swap);
 						infos->strtab_size = swap_uint16(cursh32->sh_size, infos->swap);
 					}
-				else if (!ft_strcmp((char*)(header +
+				else if (!ft_strncmp((char*)(header +
 										swap_uint32(shstrtab32->sh_offset, infos->swap) +
-										swap_uint32(cursh32->sh_name, infos->swap)), ".shstrtab")) {
+										swap_uint32(cursh32->sh_name, infos->swap)), ".shstrtab\0", 10)) {
 						infos->shstrtab_offset = swap_uint32(cursh32->sh_offset, infos->swap);
 						infos->shstrtab_size = swap_uint16(cursh32->sh_size, infos->swap);
 					}
@@ -86,15 +86,15 @@ int				sections_infos(void *header, char *path, t_info *infos)
 				shstrtab64 = (Elf64_Shdr *)((header + shoff)+(shstrndx*shsize));
 				if (shstrtab64->sh_offset + cursh64->sh_name > infos->size)
 					return error("invalid sections", path);
-				if (!ft_strcmp((char*)(header +
+				if (!ft_strncmp((char*)(header +
 										shstrtab64->sh_offset +
-										cursh64->sh_name), ".strtab")) {
+										cursh64->sh_name), ".strtab\0", 8)) {
 						infos->strtab_offset = cursh64->sh_offset;
 						infos->strtab_size = cursh64->sh_size;
 					}
-				else if (!ft_strcmp((char*)(header +
+				else if (!ft_strncmp((char*)(header +
 										shstrtab64->sh_offset +
-										cursh64->sh_name), ".shstrtab")) {
+										cursh64->sh_name), ".shstrtab\0", 10)) {
 						infos->shstrtab_offset = cursh64->sh_offset;
 						infos->shstrtab_size = cursh64->sh_size;
 					}

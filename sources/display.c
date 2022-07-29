@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 10:31:14 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 11:23:55 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,32 +45,73 @@ static void		display_value(uint64_t value, int arch)
 	ft_puthex(0, 0, value);
 }
 
+static char		section_finder(t_symbol *symbol, uint32_t shtype, uint32_t shflags)
+{
+	char letter = '?';
+	/* shdr related analysis */
+
+	if (symbol->sect_name && (
+		!ft_strncmp(symbol->sect_name, ".rodata\0", 8) ||
+		!ft_strncmp(symbol->sect_name, ".eh_frame\0", 10) ||
+		!ft_strncmp(symbol->sect_name, ".eh_frame_hdr\0", 14) ||
+		!ft_strncmp(symbol->sect_name, ".gcc_except_table\0", 18)
+	))
+		letter = 'R';
+	else if (symbol->sect_name && (
+		!ft_strncmp(symbol->sect_name, ".data\0", 6) ||
+		!ft_strncmp(symbol->sect_name, ".got.plt\0", 9) ||
+		!ft_strncmp(symbol->sect_name, ".init_array\0", 12) ||
+		!ft_strncmp(symbol->sect_name, ".dynamic\0", 9) ||
+		!ft_strncmp(symbol->sect_name, ".fini_array\0", 12) ||
+		!ft_strncmp(symbol->sect_name, ".data.rel.ro\0", 13) ||
+		!ft_strncmp(symbol->sect_name, ".ctors\0", 7) ||
+		!ft_strncmp(symbol->sect_name, ".dtors\0", 7) ||
+		!ft_strncmp(symbol->sect_name, ".got\0", 5) ||
+		!ft_strncmp(symbol->sect_name, ".tm_clone_table\0", 16)
+	))
+		letter = 'D';
+	else if ((shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_EXECINSTR))
+		|| (symbol->sect_name && (
+			!ft_strncmp(symbol->sect_name, ".text\0", 6) ||
+			!ft_strncmp(symbol->sect_name, ".init\0", 6) ||
+			!ft_strncmp(symbol->sect_name, ".fini\0", 6)
+		))
+	)
+		letter = 'T';
+	else if (symbol->sect_name && (
+		!ft_strncmp(symbol->sect_name, ".bss\0", 5) ||
+		!ft_strncmp(symbol->sect_name, ".tbss\0", 6)
+	))
+		letter = 'B';
+	return letter;
+}
+
 static char		get_type32(t_symbol *symbol, t_info infos)
 {
 	/* ELF Sections: https://docs.oracle.com/cd/E19683-01/816-1386/6m7qcoblj/index.html#chapter6-28341 */
-	unsigned char st_info = symbol->st_info;
 	Elf32_Shdr *shdr32 = (Elf32_Shdr *)(infos.shdr);
-	char letter = '?';
+	unsigned char st_info = symbol->st_info;
 	uint32_t shtype = 0x00;
 	uint32_t shflags = 0x00;
 
-	// printf("shnum: %d, shndx: %d\n", infos.e_shnum, symbol->st_shndx);
+	char letter = '?';
+
 	if (symbol->st_shndx < infos.e_shnum) {
 		shtype = swap_uint32(shdr32[symbol->st_shndx].sh_type, infos.swap);
 		shflags = swap_uint32(shdr32[symbol->st_shndx].sh_flags, infos.swap);
 	}
 
-	/*printf("name: %s, shndx: 0x%x, type: 0x%x, flags: 0x%x\n",
-		symbol->sym_name, symbol->st_shndx, shtype, shflags);*/
+	/* printf("name: %s, shndx: 0x%x, type: 0x%x, flags: 0x%x\n",
+		symbol->sym_name, symbol->st_shndx, shtype, shflags); */
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
 		letter = 'A';
-	/* common symbol*/
+	/* common symbol */
 	else if (symbol->st_shndx == SHN_COMMON)
 		letter = 'C';
 
-	/* unique global symbol */
+	/* special symbols */
 	else if (ELF32_ST_BIND(st_info) == STB_GNU_UNIQUE)
 		letter = 'u';
 	else if (ELF32_ST_BIND(st_info) == STB_WEAK && ELF32_ST_TYPE(st_info) == STT_OBJECT) {
@@ -85,28 +126,10 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 	else if (symbol->st_shndx == SHN_UNDEF)
 		letter = 'U';
 
-	/* shdr related analysis */
+	/* sections related symbols */
+	else
+		letter = section_finder(symbol, shtype, shflags);
 
-	/* Read only data section */
-	else if (shtype == SHT_PROGBITS && shflags == SHF_ALLOC)
-		letter = 'R';
-	/* initialized data section */
-	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_WRITE))
-		letter = 'D';
-	/* text code section */
-	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_EXECINSTR))
-		letter = 'T';
-	/* bss data section */
-	else if (shtype == SHT_NOBITS && shflags == (SHF_ALLOC | SHF_WRITE))
-		letter = 'B';
-	else if (shtype == SHT_INIT_ARRAY ||
-		shtype == SHT_FINI_ARRAY ||
-		shtype == SHT_DYNAMIC)
-		letter = 'D';
-	else if (shtype == SHT_PROGBITS && shflags == 0x7)
-		letter = 'T';
-	else if (shtype == SHT_PROGBITS && shflags == 0x12)
-		letter = 'R';
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF32_ST_BIND(st_info) == STB_LOCAL && letter != '?')
 		letter += 32;
@@ -117,36 +140,38 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 static char		get_type64(t_symbol *symbol, t_info infos)
 {
 	/* ELF Sections: https://docs.oracle.com/cd/E19683-01/816-1386/6m7qcoblj/index.html#chapter6-28341 */
-	unsigned char st_info = symbol->st_info;
 	Elf64_Shdr *shdr64 = (Elf64_Shdr *)(infos.shdr);
-	char letter = '?';
+	unsigned char st_info = symbol->st_info;
 	uint32_t shtype = 0x00;
 	uint32_t shflags = 0x00;
 
-	// printf("shnum: %d, shndx: %d\n", infos.e_shnum, symbol->st_shndx);
+	char letter = '?';
+
 	if (symbol->st_shndx < infos.e_shnum) {
 		shtype = shdr64[symbol->st_shndx].sh_type;
 		shflags = shdr64[symbol->st_shndx].sh_flags;
 	}
-	/*printf("name: %s, shndx: 0x%x, type: 0x%x, bind: 0x%x\n",
-		symbol->sym_name, symbol->st_shndx, shtype,
-		ELF64_ST_BIND(st_info));*/
+
+	/* printf("name: %s, sect_name: %s, shndx: 0x%x, type: 0x%x, bind: 0x%x\n",
+		symbol->sym_name, symbol->sect_name, symbol->st_shndx, shtype,
+		ELF64_ST_BIND(st_info)); */
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
 		letter = 'A';
-	/* common symbol*/
+	/* common symbol */
 	else if (symbol->st_shndx == SHN_COMMON)
 		letter = 'C';
 
-	/* unique global symbol */
+	/* special symbols */
 	else if (ELF64_ST_BIND(st_info) == STB_GNU_UNIQUE)
 		letter = 'u';
 	else if (ELF64_ST_BIND(st_info) == STB_WEAK && ELF64_ST_TYPE(st_info) == STT_OBJECT) {
 		letter = 'V';
 		if (symbol->st_shndx == SHN_UNDEF)
 			letter = 'v';
-	}	else if (ELF64_ST_BIND(st_info) == STB_WEAK) {
+	}
+	else if (ELF64_ST_BIND(st_info) == STB_WEAK) {
 		letter = 'W';
 		if (symbol->st_shndx == SHN_UNDEF)
 			letter = 'w';
@@ -154,44 +179,10 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 	else if (symbol->st_shndx == SHN_UNDEF)
 		letter = 'U';
 
-	/* shdr related analysis */
-	/*
-      {'b', ".bss\0"},
-      {'t', ".text\0"},
-      {'t', ".init\0"},
-      {'t', ".fini\0"},
-      {'d', ".data\0"},
-      {'d', ".got.plt\0"},
-      {'d', ".init_array\0"},
-      {'d', ".dynamic\0"},
-      {'d', ".fini_array\0"},
-      {'r', ".rodata\0"},
-      {'r', ".eh_frame\0"},
-      {'r', ".eh_frame_hdr\0"},
-      {'r', ".gcc_except_table\0"}
-	*/
+	/* sections related symbols */
+	else
+		letter = section_finder(symbol, shtype, shflags);
 
-	/* Read only data section */
-	else if (shtype == SHT_PROGBITS && symbol->sect_name && (
-		!ft_strncmp(symbol->sect_name, ".rodata\0", 8) ||
-		!ft_strncmp(symbol->sect_name, ".eh_frame\0", 10) ||
-		!ft_strncmp(symbol->sect_name, ".eh_frame_hdr\0", 14) ||
-		!ft_strncmp(symbol->sect_name, ".gcc_except_table\0", 18)
-	))
-		letter = 'R';
-	/* initialized data section */
-	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_WRITE))
-		letter = 'D';
-	/* text code section */
-	else if (shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_EXECINSTR))
-		letter = 'T';
-	/* bss data section */
-	else if (shtype == SHT_NOBITS && shflags == (SHF_ALLOC | SHF_WRITE))
-		letter = 'B';
-	else if (shtype == SHT_INIT_ARRAY ||
-		shtype == SHT_FINI_ARRAY ||
-		shtype == SHT_DYNAMIC)
-		letter = 'D';
 	/* If lowercase, the symbol is usually local; if uppercase, the symbol is global (external) */
 	if (ELF64_ST_BIND(st_info) == STB_LOCAL && letter != '?')
 		letter += 32;
@@ -230,7 +221,8 @@ void		display_symbols(t_symbol *symbols, t_info infos)
 				letter = get_type32(tmp, infos);
 			if (letter == 'U' || letter == 'w')
 				display_value(0, tmp->arch);
-			else if ((letter == 't' || letter == 'T' || letter == 'a')
+			else if ((letter == 't' || letter == 'T' || letter == 'a' ||
+				letter == 'b')
 				&& !tmp->st_value)
 				display_zeroes(tmp->arch);
 			else
