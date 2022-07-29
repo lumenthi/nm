@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 12:33:13 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 12:52:46 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,10 +70,7 @@ static int		sym_cmp(t_symbol *s1b, t_symbol *s2b)
 	int ret = sym_cmp_lower(s1b->sym_name, s2b->sym_name);
 	if (ret)
 		return ret;
-	ret = ft_strcmp(s2b->sym_name, s1b->sym_name);
-	if (ret)
-		return ret;
-	return s1b->st_value > s2b->st_value ? 1 : -1;
+	return ft_strcmp(s2b->sym_name, s1b->sym_name);
 }
 
 void	sort_symbols(t_symbol **head, t_info infos)
@@ -81,7 +78,7 @@ void	sort_symbols(t_symbol **head, t_info infos)
 	t_symbol *current;
 	t_symbol *next;
 	t_symbol *prev;
-	uint8_t value = 0;
+	int value = 0;
 	int sorted = 0;
 
 	if (infos.args & 0x01)
@@ -96,9 +93,11 @@ void	sort_symbols(t_symbol **head, t_info infos)
 		sorted = 1;
 		while (next) {
 			value = infos.args & 0x02 ?
-				sym_cmp(current, next) < 0:
-				sym_cmp(current, next) > 0;
-			if (value) {
+				sym_cmp(next, current):
+				sym_cmp(current, next);
+			if (value == 0)
+				value = current->st_value - next->st_value;
+			if (value > 0) {
 				if (prev)
 					prev->next = next;
 				else
