@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 18:11:02 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 18:51:11 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,7 +69,7 @@ int		ft_nm(char *path, void *buffer, size_t size, uint8_t args)
 		&&e_type!=ET_HIOS&&e_type!=ET_LOPROC&&e_type!=ET_HIPROC)
 			return error("file format not recognized", path);
 
-		if (sections_infos((void*)header, path, &infos) == -1)
+		if (sections_infos((void*)header, path, &infos))
 			return -1;
 		if (infos.symtab_offset == 0 || infos.symtab_size == 0)
 			return error("no symbols", path);
