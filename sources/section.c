@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:45:08 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 10:40:15 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 18:44:37 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,11 @@ int				sections_infos(void *header, char *path, t_info *infos)
 	while (shnum) {
 		if (infos->arch == 32) {
 			cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
+
+			/* Corrupted section check */
+			if (swap_uint16(cursh32->sh_size, infos->swap) >= infos->size)
+				return error("corrupted section", path);
+
 			if (swap_uint32(cursh32->sh_type, infos->swap) == 0x2) { // SYMTAB
 				infos->symtab_offset = swap_uint32(cursh32->sh_offset, infos->swap);
 				infos->symtab_size = swap_uint32(cursh32->sh_size, infos->swap);
@@ -78,6 +83,11 @@ int				sections_infos(void *header, char *path, t_info *infos)
 		}
 		else {
 			cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
+
+			/* Corrupted section check */
+			if (cursh64->sh_size >= infos->size)
+				return error("corrupted section", path);
+
 			if (cursh64->sh_type == 0x2) { // SYMTAB
 				infos->symtab_offset = cursh64->sh_offset;
 				infos->symtab_size = cursh64->sh_size;
