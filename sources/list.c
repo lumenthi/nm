@@ -6,33 +6,13 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 12:52:46 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 13:04:08 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
 /* HELL sorting functions to match NM output */
-
-static int		sym_cmp_lower(char *s1, char *s2)
-{
-	int i;
-	char s1_c;
-	char s2_c;
-
-	i = 0;
-	while (s1[i] || s2[i])
-	{
-		s1_c = ft_tolower(s1[i]);
-		s2_c = ft_tolower(s2[i]);
-		if (s1_c < s2_c)
-			return (s1_c - s2_c);
-		if (s1_c > s2_c)
-			return (s1_c - s2_c);
-		i++;
-	}
-	return (0);
-}
 
 static int		sym_cmp(t_symbol *s1b, t_symbol *s2b)
 {
@@ -67,9 +47,6 @@ static int		sym_cmp(t_symbol *s1b, t_symbol *s2b)
 		j++;
 	}
 	/* This is horrible but it matches the nm algo */
-	int ret = sym_cmp_lower(s1b->sym_name, s2b->sym_name);
-	if (ret)
-		return ret;
 	return ft_strcmp(s2b->sym_name, s1b->sym_name);
 }
 
