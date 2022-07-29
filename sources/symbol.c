@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:51:11 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 10:23:14 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 18:12:07 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,6 @@ int		get_symbols(void *header, t_info infos, t_symbol **symbols)
 	Elf64_Sym *Sym64 = NULL;
 	if (infos.arch == 32) {
 		while (i * sizeof(Elf32_Sym) < infos.symtab_size) {
-			//printf("Processing symbol: 0x%ld/0x%ld\n", i*sizeof(Elf32_Sym), infos.symtab_size);
 			Sym32 = (Elf32_Sym *)(header+infos.symtab_offset+i*sizeof(Elf32_Sym));
 			process_symbol32(header, Sym32, symbols, infos);
 			i++;
@@ -82,7 +81,6 @@ int		get_symbols(void *header, t_info infos, t_symbol **symbols)
 	}
 	else {
 		while (i * sizeof(Elf64_Sym) < infos.symtab_size) {
-			//printf("Processing symbol: 0x%ld/0x%ld\n", i*sizeof(Elf64_Sym), infos.symtab_size);
 			Sym64 = (Elf64_Sym *)(header+infos.symtab_offset+i*sizeof(Elf64_Sym));
 			process_symbol64(header, Sym64, symbols, infos);
 			i++;

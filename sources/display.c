@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 16:55:32 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 18:10:39 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,9 +107,6 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 		shflags = swap_uint32(shdr32[symbol->st_shndx].sh_flags, infos.swap);
 	}
 
-	/* printf("name: %s, sect_name: %s, shndx: 0x%x, type: 0x%x, flags: 0x%x\n",
-		symbol->sym_name, symbol->sect_name, symbol->st_shndx, shtype, shflags); */
-
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
 		letter = 'A';
@@ -157,10 +154,6 @@ static char		get_type64(t_symbol *symbol, t_info infos)
 		shtype = shdr64[symbol->st_shndx].sh_type;
 		shflags = shdr64[symbol->st_shndx].sh_flags;
 	}
-
-	/* printf("name: %s, sect_name: %s, shndx: 0x%x, type: 0x%x, bind: 0x%x\n",
-		symbol->sym_name, symbol->sect_name, symbol->st_shndx, shtype,
-		ELF64_ST_BIND(st_info)); */
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)

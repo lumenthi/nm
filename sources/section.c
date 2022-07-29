@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:45:08 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 10:40:15 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 18:11:41 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,21 +27,18 @@ int				sections_infos(void *header, char *path, t_info *infos)
 
 	// Variables assignment
 	if (infos->arch == 32) {
-		// printf("ELF 32-Bits\n");
 		shoff = swap_uint32((uint32_t)(((Elf32_Ehdr*)header)->e_shoff), infos->swap);
 		shnum = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shnum), infos->swap);
 		shsize = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shentsize), infos->swap);
 		shstrndx = swap_uint16((uint16_t)(((Elf32_Ehdr*)header)->e_shstrndx), infos->swap);
 	}
 	else {
-		// printf("ELF 64-Bits\n");
 		shoff = (uint64_t)(((Elf64_Ehdr*)header)->e_shoff);
 		shnum = (uint32_t)(((Elf64_Ehdr*)header)->e_shnum);
 		shsize = (uint32_t)(((Elf64_Ehdr*)header)->e_shentsize);
 		shstrndx = (uint16_t)(((Elf64_Ehdr*)header)->e_shstrndx);
 	}
-	// printf("Found %d sections with size: %d at offset: %ld\n", shnum, shsize, shoff);
-	// printf("Checking: %ld > %ld || %ld > %ld\n", shoff+shnum*shsize, size, shoff+shstrndx*shsize, size);
+
 	// Error check
 	if (shoff+shnum*shsize > infos->size || shoff+shstrndx*shsize > infos->size)
 		return error("invalid sections", path);

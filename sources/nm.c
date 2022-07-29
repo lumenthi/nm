@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 10:51:30 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 17:10:56 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 18:11:02 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,10 +73,7 @@ int		ft_nm(char *path, void *buffer, size_t size, uint8_t args)
 			return -1;
 		if (infos.symtab_offset == 0 || infos.symtab_size == 0)
 			return error("no symbols", path);
-		//printf("Found symbol table at offset: 0x%lx with size: 0x%lx\n", infos.symtab_offset,
-			//infos.symtab_size);
-		//printf("Found string table at offset: 0x%lx with size: 0x%lx\n", infos.strtab_offset,
-			//infos.strtab_size);
+
 		get_symbols((void*)header, infos, &symbols);
 		sort_symbols(&symbols, infos);
 		display_symbols(symbols, infos);

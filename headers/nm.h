@@ -6,15 +6,12 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/01/14 11:50:22 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 17:11:04 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 18:15:00 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef NM_H
 # define NM_H
-
-// FOR DEBUG (printf), remove after
-#include <stdio.h>
 
 #include "libft.h"
 
@@ -24,7 +21,6 @@
 #include <fcntl.h> // OPEN
 #include <elf.h> // ELF RELATED STRUCTURES
 #include <stdlib.h> // MALLOC
-#include <ar.h> // AR FILES
 
 // STRUCTURES
 // HEADER
