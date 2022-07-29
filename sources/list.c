@@ -6,20 +6,42 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 11:33:39 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/28 15:28:38 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 12:33:13 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "nm.h"
 
-static int		sym_cmp(char *s1b, char *s2b)
+/* HELL sorting functions to match NM output */
+
+static int		sym_cmp_lower(char *s1, char *s2)
+{
+	int i;
+	char s1_c;
+	char s2_c;
+
+	i = 0;
+	while (s1[i] || s2[i])
+	{
+		s1_c = ft_tolower(s1[i]);
+		s2_c = ft_tolower(s2[i]);
+		if (s1_c < s2_c)
+			return (s1_c - s2_c);
+		if (s1_c > s2_c)
+			return (s1_c - s2_c);
+		i++;
+	}
+	return (0);
+}
+
+static int		sym_cmp(t_symbol *s1b, t_symbol *s2b)
 {
 	int i;
 	int j;
 	char s1_c;
 	char s2_c;
-	char *s1 = s1b;
-	char *s2 = s2b;
+	char *s1 = s1b->sym_name;
+	char *s2 = s2b->sym_name;
 
 	i = 0;
 	j = 0;
@@ -44,7 +66,14 @@ static int		sym_cmp(char *s1b, char *s2b)
 		i++;
 		j++;
 	}
-	return (ft_strcmp(s1b, s2b));
+	/* This is horrible but it matches the nm algo */
+	int ret = sym_cmp_lower(s1b->sym_name, s2b->sym_name);
+	if (ret)
+		return ret;
+	ret = ft_strcmp(s2b->sym_name, s1b->sym_name);
+	if (ret)
+		return ret;
+	return s1b->st_value > s2b->st_value ? 1 : -1;
 }
 
 void	sort_symbols(t_symbol **head, t_info infos)
@@ -67,8 +96,8 @@ void	sort_symbols(t_symbol **head, t_info infos)
 		sorted = 1;
 		while (next) {
 			value = infos.args & 0x02 ?
-				sym_cmp(current->sym_name, next->sym_name) < 0:
-				sym_cmp(current->sym_name, next->sym_name) > 0;
+				sym_cmp(current, next) < 0:
+				sym_cmp(current, next) > 0;
 			if (value) {
 				if (prev)
 					prev->next = next;
