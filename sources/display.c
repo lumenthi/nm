@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 11:23:55 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/29 11:51:59 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,31 +50,37 @@ static char		section_finder(t_symbol *symbol, uint32_t shtype, uint32_t shflags)
 	char letter = '?';
 	/* shdr related analysis */
 
-	if (symbol->sect_name && (
-		!ft_strncmp(symbol->sect_name, ".rodata\0", 8) ||
-		!ft_strncmp(symbol->sect_name, ".eh_frame\0", 10) ||
-		!ft_strncmp(symbol->sect_name, ".eh_frame_hdr\0", 14) ||
-		!ft_strncmp(symbol->sect_name, ".gcc_except_table\0", 18)
-	))
-		letter = 'R';
-	else if (symbol->sect_name && (
-		!ft_strncmp(symbol->sect_name, ".data\0", 6) ||
-		!ft_strncmp(symbol->sect_name, ".got.plt\0", 9) ||
-		!ft_strncmp(symbol->sect_name, ".init_array\0", 12) ||
-		!ft_strncmp(symbol->sect_name, ".dynamic\0", 9) ||
-		!ft_strncmp(symbol->sect_name, ".fini_array\0", 12) ||
-		!ft_strncmp(symbol->sect_name, ".data.rel.ro\0", 13) ||
-		!ft_strncmp(symbol->sect_name, ".ctors\0", 7) ||
-		!ft_strncmp(symbol->sect_name, ".dtors\0", 7) ||
-		!ft_strncmp(symbol->sect_name, ".got\0", 5) ||
-		!ft_strncmp(symbol->sect_name, ".tm_clone_table\0", 16)
-	))
+	if ((shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_WRITE)) ||
+		(symbol->sect_name && (
+			!ft_strncmp(symbol->sect_name, ".data\0", 6) ||
+			!ft_strncmp(symbol->sect_name, ".got.plt\0", 9) ||
+			!ft_strncmp(symbol->sect_name, ".init_array\0", 12) ||
+			!ft_strncmp(symbol->sect_name, ".dynamic\0", 9) ||
+			!ft_strncmp(symbol->sect_name, ".fini_array\0", 12) ||
+			!ft_strncmp(symbol->sect_name, ".data.rel.ro\0", 13) ||
+			!ft_strncmp(symbol->sect_name, ".ctors\0", 7) ||
+			!ft_strncmp(symbol->sect_name, ".dtors\0", 7) ||
+			!ft_strncmp(symbol->sect_name, ".got\0", 5) ||
+			!ft_strncmp(symbol->sect_name, ".tm_clone_table\0", 16)
+		))
+	)
 		letter = 'D';
-	else if ((shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_EXECINSTR))
-		|| (symbol->sect_name && (
+	else if ((symbol->sect_name && (
+			!ft_strncmp(symbol->sect_name, ".rodata\0", 8) ||
+			!ft_strncmp(symbol->sect_name, ".eh_frame\0", 10) ||
+			!ft_strncmp(symbol->sect_name, ".interp\0", 8) ||
+			!ft_strncmp(symbol->sect_name, ".eh_frame_hdr\0", 14) ||
+			!ft_strncmp(symbol->sect_name, ".gcc_except_table\0", 18) ||
+			!ft_strncmp(symbol->sect_name, ".rodata.cst4\0", 13)
+		))
+	)
+		letter = 'R';
+	else if ((shtype == SHT_PROGBITS && shflags == (SHF_ALLOC | SHF_EXECINSTR)) ||
+		(symbol->sect_name && (
 			!ft_strncmp(symbol->sect_name, ".text\0", 6) ||
 			!ft_strncmp(symbol->sect_name, ".init\0", 6) ||
-			!ft_strncmp(symbol->sect_name, ".fini\0", 6)
+			!ft_strncmp(symbol->sect_name, ".fini\0", 6) ||
+			!ft_strncmp(symbol->sect_name, ".plt\0", 5)
 		))
 	)
 		letter = 'T';
@@ -101,8 +107,8 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 		shflags = swap_uint32(shdr32[symbol->st_shndx].sh_flags, infos.swap);
 	}
 
-	/* printf("name: %s, shndx: 0x%x, type: 0x%x, flags: 0x%x\n",
-		symbol->sym_name, symbol->st_shndx, shtype, shflags); */
+	/* printf("name: %s, sect_name: %s, shndx: 0x%x, type: 0x%x, flags: 0x%x\n",
+		symbol->sym_name, symbol->sect_name, symbol->st_shndx, shtype, shflags); */
 
 	/* absolute symbol */
 	if (symbol->st_shndx == SHN_ABS)
