@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/25 18:45:08 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 18:44:37 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/30 18:40:06 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,8 @@ int				sections_infos(void *header, char *path, t_info *infos)
 			cursh32 = (Elf32_Shdr *)(header + shoff + shnum*shsize);
 
 			/* Corrupted section check */
-			if (swap_uint16(cursh32->sh_size, infos->swap) >= infos->size)
+			if (swap_uint16(cursh32->sh_size, infos->swap) >= infos->size &&
+				swap_uint32(cursh32->sh_type, infos->swap) != 0x8) // OBJECT
 				return error("corrupted section", path);
 
 			if (swap_uint32(cursh32->sh_type, infos->swap) == 0x2) { // SYMTAB
@@ -85,7 +86,7 @@ int				sections_infos(void *header, char *path, t_info *infos)
 			cursh64 = (Elf64_Shdr *)(header + shoff + shnum*shsize);
 
 			/* Corrupted section check */
-			if (cursh64->sh_size >= infos->size)
+			if (cursh64->sh_size >= infos->size && cursh64->sh_type != 0x8) // OBJECT
 				return error("corrupted section", path);
 
 			if (cursh64->sh_type == 0x2) { // SYMTAB
