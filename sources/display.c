@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/29 16:55:32 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/31 11:08:39 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,8 @@ static char		section_finder(t_symbol *symbol, uint32_t shtype, uint32_t shflags)
 			!ft_strncmp(symbol->sect_name, ".ctors\0", 7) ||
 			!ft_strncmp(symbol->sect_name, ".dtors\0", 7) ||
 			!ft_strncmp(symbol->sect_name, ".got\0", 5) ||
-			!ft_strncmp(symbol->sect_name, ".tm_clone_table\0", 16)
+			!ft_strncmp(symbol->sect_name, ".tm_clone_table\0", 16) ||
+			!ft_strncmp(symbol->sect_name, ".preinit_array\0", 15)
 		))
 	)
 		letter = 'D';
