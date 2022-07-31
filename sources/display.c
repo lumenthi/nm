@@ -6,7 +6,7 @@
 /*   By: lumenthi <lumenthi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/21 11:52:41 by lumenthi          #+#    #+#             */
-/*   Updated: 2022/07/31 11:18:12 by lumenthi         ###   ########.fr       */
+/*   Updated: 2022/07/31 12:09:24 by lumenthi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,8 +71,8 @@ static char		section_finder(t_symbol *symbol, uint32_t shtype, uint32_t shflags)
 			!ft_strncmp(symbol->sect_name, ".interp\0", 8) ||
 			!ft_strncmp(symbol->sect_name, ".eh_frame_hdr\0", 14) ||
 			!ft_strncmp(symbol->sect_name, ".gcc_except_table\0", 18) ||
-			!ft_strncmp(symbol->sect_name, ".rodata.str", 11) ||
-			!ft_strncmp(symbol->sect_name, ".rodata.cst", 11)
+			!ft_strncmp(symbol->sect_name, ".rodata.", 8) ||
+			!ft_strncmp(symbol->sect_name, ".stapsdt", 8)
 		))
 	)
 		letter = 'R';
@@ -90,6 +90,11 @@ static char		section_finder(t_symbol *symbol, uint32_t shtype, uint32_t shflags)
 		!ft_strncmp(symbol->sect_name, ".tbss\0", 6)
 	))
 		letter = 'B';
+	else if (symbol->sect_name && (
+		!ft_strncmp(symbol->sect_name, ".debug", 6) ||
+		!ft_strncmp(symbol->sect_name, ".gnu.warning", 12)
+	))
+		letter = 'N';
 	return letter;
 }
 
@@ -122,7 +127,8 @@ static char		get_type32(t_symbol *symbol, t_info infos)
 		letter = 'V';
 		if (symbol->st_shndx == SHN_UNDEF)
 			letter = 'v';
-	}	else if (ELF32_ST_BIND(st_info) == STB_WEAK) {
+	}
+	else if (ELF32_ST_BIND(st_info) == STB_WEAK) {
 		letter = 'W';
 		if (symbol->st_shndx == SHN_UNDEF)
 			letter = 'w';
